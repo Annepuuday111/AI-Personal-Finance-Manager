@@ -1,0 +1,1273 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Transaction - FinanceAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1e40af;
+            --primary-dark: #1e3a8a;
+            --primary-light: #3b82f6;
+            --secondary-color: #059669;
+            --accent-color: #ea580c;
+            --danger-color: #dc2626;
+            --success-color: #16a34a;
+            --warning-color: #d97706;
+            --info-color: #0891b2;
+            --purple-color: #7c3aed;
+            --pink-color: #db2777;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --sidebar-width: 280px;
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+            line-height: 1.6;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Loading Animation */
+        .loading {
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 50%, var(--purple-color) 100%);
+            color: white;
+            padding: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .sidebar-header {
+            padding: 32px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-header p {
+            font-size: 14px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .sidebar-menu {
+            padding: 24px 0;
+        }
+
+        .menu-section {
+            margin-bottom: 32px;
+        }
+
+        .menu-section-title {
+            padding: 0 24px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.7;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 14px;
+            position: relative;
+            border-radius: 0 24px 24px 0;
+            margin: 2px 8px 2px 0;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .menu-item i {
+            font-size: 20px;
+            width: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .menu-item:hover i {
+            transform: scale(1.1);
+        }
+
+        .sidebar-footer {
+            padding: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .user-info p {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 32px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 24px;
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow);
+            animation: slideInFromTop 0.6s ease-out;
+        }
+
+        @keyframes slideInFromTop {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome h2 {
+            color: var(--gray-900);
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-700) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome p {
+            color: var(--gray-600);
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.25);
+        }
+
+        /* Form Styles */
+        .form-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 32px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+            animation-delay: 0.3s;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--gray-700);
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group label .required {
+            color: var(--danger-color);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            color: var(--gray-900);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-input::placeholder {
+            color: var(--gray-400);
+            font-style: italic;
+        }
+
+        /* Select (separate class) */
+        .form-select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            background: white url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") no-repeat right 14px center/16px 16px;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.2s ease;
+            color: var(--gray-900);
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            min-height: 100px;
+            resize: vertical;
+            transition: all 0.2s ease;
+            color: var(--gray-900);
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+            transform: translateY(-1px);
+        }
+
+        /* Custom date input styling */
+        .form-input[type="date"] {
+            position: relative;
+        }
+
+        .form-input[type="date"]::-webkit-calendar-picker-indicator {
+            color: var(--primary-color);
+            filter: brightness(1.2);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        /* Select styling */
+        .form-input select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px 16px;
+            padding-right: 40px;
+        }
+
+        .form-input select:focus {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2525637' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.5;
+        }
+
+        /* Type Selector */
+        .type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .type-option {
+            position: relative;
+        }
+
+        .type-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .type-option label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 20px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius-lg);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .type-option label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.05), transparent);
+            transition: left 0.5s;
+        }
+
+        .type-option input[type="radio"]:checked+label {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+        }
+
+        .type-option input[type="radio"]:checked+label::before {
+            left: 100%;
+        }
+
+        .type-option .icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .type-option input[type="radio"]:checked+label .icon {
+            transform: scale(1.1);
+        }
+
+        .type-option .text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-700);
+            transition: color 0.3s ease;
+        }
+
+        .type-option input[type="radio"]:checked+label .text {
+            color: var(--primary-color);
+        }
+
+        /* Checkbox Group */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: 500;
+            color: var(--gray-700);
+            cursor: pointer;
+        }
+
+        /* Input with icon */
+        .input-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-left {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.03), rgba(15, 23, 42, 0.01));
+            border-radius: 10px;
+            font-size: 18px;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .input-with-icon .form-input,
+        .input-with-icon .form-select,
+        .input-with-icon .form-textarea {
+            flex: 1 1 auto;
+            width: auto;
+        }
+
+        .is-invalid {
+            border-color: var(--danger-color) !important;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.06) !important;
+            animation: shake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        .type-option label.is-invalid {
+            border-color: var(--danger-color) !important;
+            box-shadow: 0 6px 18px rgba(220, 38, 38, 0.08);
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Toast / error popup */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: white;
+            border-left: 4px solid var(--danger-color);
+            padding: 12px 16px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            min-width: 260px;
+            color: var(--gray-800);
+            transform-origin: right top;
+            animation: toastIn 0.36s ease-out;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-8px) scale(.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 1px solid var(--gray-200);
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        /* Error Styles */
+        .errorlist {
+            list-style: none;
+            margin: 8px 0 0;
+            padding: 0;
+        }
+
+        .errorlist li {
+            color: var(--danger-color);
+            font-size: 13px;
+            margin-top: 5px;
+            padding: 8px 12px;
+            background: rgba(220, 38, 38, 0.05);
+            border-radius: var(--border-radius);
+            border-left: 3px solid var(--danger-color);
+        }
+
+        .help-text {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            --sidebar-width: 260px;
+            .main-content {
+                padding: 24px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: var(--shadow-xl);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+                overflow-y: auto;
+            }
+
+            .dashboard-layout {
+                height: auto;
+                overflow: visible;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .welcome h2 {
+                font-size: 28px;
+            }
+
+            .top-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .form-card {
+                padding: 24px;
+            }
+
+            .type-selector {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 16px;
+            }
+
+            .top-bar {
+                padding: 16px;
+            }
+
+            .welcome h2 {
+                font-size: 24px;
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 13px;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .form-input {
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+
+            .type-option label {
+                padding: 20px 16px;
+            }
+
+            .type-option .icon {
+                font-size: 32px;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 18px;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+            box-shadow: var(--shadow-xl);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(2px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>FinanceAI</h1>
+                <p>Smart Finance Manager</p>
+            </div>
+
+            <nav class="sidebar-menu">
+                <div class="menu-section">
+                    <div class="menu-section-title">Main</div>
+                    <a href="{% url 'accounts:dashboard' %}" class="menu-item">
+                        <i>📊</i> Dashboard
+                    </a>
+                    <a href="{% url 'accounts:transactions' %}" class="menu-item active">
+                        <i>💸</i> Transactions
+                    </a>
+                    <a href="{% url 'accounts:bank_accounts' %}" class="menu-item">
+                        <i>🏦</i> Bank Accounts
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-section-title">Planning</div>
+                    <a href="{% url 'accounts:budgets' %}" class="menu-item">
+                        <i>💰</i> Budgets
+                    </a>
+                    <a href="{% url 'accounts:financial_goals' %}" class="menu-item">
+                        <i>🎯</i> Goals
+                    </a>
+                    <a href="{% url 'accounts:categories' %}" class="menu-item">
+                        <i>📑</i> Categories
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-section-title">Insights</div>
+                    <a href="{% url 'accounts:ai_insights' %}" class="menu-item">
+                        <i>🤖</i> AI Insights
+                    </a>
+                    <a href="{% url 'accounts:analytics' %}" class="menu-item">
+                        <i>📈</i> Analytics
+                    </a>
+                    <a href="{% url 'accounts:notifications' %}"
+                        class="menu-item{% if request.resolver_match.url_name == 'notifications' %} active{% endif %}">
+                        <i>🔔</i> Notifications
+                        {% if unread_notifications_count > 0 %}
+                        <span
+                            style="background: #ef4444; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: auto;">{{
+                            unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-section-title">Settings</div>
+
+                    <a href="{% url 'accounts:profile' %}" class="menu-item">
+                        <i>⚙️</i> Settings
+                    </a>
+
+                    <a href="{% url 'chat:chat_home' %}" class="menu-item">
+                        <i>💬</i> Chat
+                    </a>
+
+                    <a href="{% url 'account_logout' %}" class="menu-item">
+                        <i>🚪</i> Logout
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">{{ user.first_name.0|upper|default:user.email.0|upper }}</div>
+                    <div class="user-info">
+                        <h4>{{ user.first_name|default:"User" }}</h4>
+                        <p>{{ user.last_name|default:"" }}</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                <i>☰</i>
+            </button>
+
+            <div class="top-bar">
+                <div class="welcome">
+                    <h2>Add Transaction</h2>
+                    <p>Record your income, expense, or transfer</p>
+                </div>
+                <div class="top-actions">
+                    <a href="{% url 'accounts:transactions' %}" class="btn btn-secondary">← Back to Transactions</a>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Transaction Type -->
+                    <div class="type-selector">
+                        <div class="type-option">
+                            <input type="radio" name="transaction_type" value="INCOME" id="type-income"
+       {% if form.transaction_type.value == 'INCOME' %}checked{% endif %}>
+
+                            <label for="type-income">
+                                <span class="icon">📈</span>
+                                <span class="text">Income</span>
+                            </label>
+                        </div>
+                        <div class="type-option">
+                            <input type="radio" name="transaction_type" value="EXPENSE" id="type-expense"
+       {% if form.transaction_type.value == 'EXPENSE' %}checked{% endif %}>
+
+                            <label for="type-expense">
+                                <span class="icon">📉</span>
+                                <span class="text">Expense</span>
+                            </label>
+                        </div>
+                        <div class="type-option">
+                            <input type="radio" name="transaction_type" value="TRANSFER" id="type-transfer"
+       {% if form.transaction_type.value == 'TRANSFER' %}checked{% endif %}>
+
+                            <label for="type-transfer">
+                                <span class="icon">🔄</span>
+                                <span class="text">Transfer</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% if form.transaction_type.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.transaction_type.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <div class="form-grid">
+                        <!-- Amount -->
+                        <div class="form-group">
+                            <label>Amount <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <span class="icon-left">₹</span>
+                                {{ form.amount }}
+                            </div>
+                            {% if form.amount.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.amount.errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            <div class="help-text">Enter amount in ₹</div>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="form-group">
+                            <label>Date <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <span class="icon-left">📅</span>
+                                {{ form.date }}
+                            </div>
+                            {% if form.date.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.date.errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+
+                        <!-- Account -->
+                        <div class="form-group">
+                            <label>Account <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <span class="icon-left">🏦</span>
+                                {{ form.account }}
+                            </div>
+                            {% if form.account.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.account.errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+
+                        <!-- Category -->
+                        <div class="form-group">
+                            <label>Category <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <span class="icon-left">🏷️</span>
+                                {{ form.category }}
+                            </div>
+                            {% if form.category.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.category.errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group form-group-full">
+                        <label>Description <span class="required">*</span></label>
+                        <div class="input-with-icon">
+                            <span class="icon-left">✏️</span>
+                            {{ form.description }}
+                        </div>
+                        {% if form.description.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.description.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group form-group-full">
+                        <label>Notes</label>
+                        <div class="input-with-icon">
+                            <span class="icon-left">🗒️</span>
+                            {{ form.notes }}
+                        </div>
+                        {% if form.notes.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.notes.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- Tags -->
+                        <div class="form-group">
+                            <label>Tags</label>
+                            <div class="input-with-icon">
+                                <span class="icon-left">🏷️</span>
+                                {{ form.tags }}
+                            </div>
+                            {% if form.tags.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.tags.errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            <div class="help-text">Separate with commas</div>
+                        </div>
+
+                        <!-- Receipt -->
+                        <div class="form-group">
+                            <label>Receipt</label>
+                            <div class="input-with-icon">
+                                <span class="icon-left">📎</span>
+                                {{ form.receipt }}
+                            </div>
+                            {% if form.receipt.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.receipt.errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            <div class="help-text">Upload receipt image (optional)</div>
+                        </div>
+                    </div>
+
+                    <!-- Recurring -->
+                    <div class="checkbox-group">
+                        {{ form.is_recurring }}
+                        <label for="{{ form.is_recurring.id_for_label }}">This is a recurring transaction</label>
+                    </div>
+                    {% if form.is_recurring.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.is_recurring.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <!-- Recurring Frequency (shown only if recurring is checked) -->
+                    <div class="form-group" id="recurring-frequency" style="display: none; margin-top: 20px;">
+                        <label>Recurring Frequency</label>
+                        <div class="input-with-icon">
+                            <span class="icon-left">🔁</span>
+                            {{ form.recurring_frequency }}
+                        </div>
+                        {% if form.recurring_frequency.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.recurring_frequency.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">💾 Save Transaction</button>
+                        <a href="{% url 'accounts:transactions' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+        // Toggle recurring frequency field
+        const recurringCheckbox = document.querySelector('input[name="is_recurring"]');
+        const recurringFrequency = document.getElementById('recurring-frequency');
+
+        if (recurringCheckbox) {
+            recurringCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    recurringFrequency.style.display = 'block';
+                } else {
+                    recurringFrequency.style.display = 'none';
+                }
+            });
+
+            // Check initial state
+            if (recurringCheckbox.checked) {
+                recurringFrequency.style.display = 'block';
+            }
+        }
+    </script>
+    <script>
+        // Error toasts and field highlighting
+        document.addEventListener('DOMContentLoaded', function () {
+            const toastContainer = document.getElementById('toast-container');
+            const errorLists = document.querySelectorAll('.errorlist');
+            let firstField = null;
+
+            function createToast(message) {
+                const node = document.createElement('div');
+                node.className = 'toast';
+                node.innerText = message;
+                toastContainer.appendChild(node);
+                setTimeout(() => {
+                    node.style.opacity = '0';
+                    node.style.transform = 'translateX(8px)';
+                    setTimeout(() => node.remove(), 300);
+                }, 5200);
+            }
+
+            errorLists.forEach(function (list) {
+                const items = list.querySelectorAll('li');
+                items.forEach(function (li) {
+                    createToast(li.innerText.trim());
+                });
+
+                // try to find the associated input/select in the same form-group
+                const group = list.closest('.form-group');
+                if (group) {
+                    const field = group.querySelector('input, select, textarea');
+                    if (field) {
+                        field.classList.add('is-invalid');
+                        if (!firstField) firstField = field;
+                    }
+                } else {
+                    // some errors (like transaction_type) sit outside a .form-group; try to mark related inputs
+                    const previous = list.previousElementSibling;
+                    if (previous && previous.classList && previous.classList.contains('type-selector')) {
+                        const radios = previous.querySelectorAll('input[type="radio"]');
+                        radios.forEach(r => r.closest('label')?.classList?.add('is-invalid') || r.classList.add('is-invalid'));
+                        if (radios.length && !firstField) firstField = radios[0];
+                    }
+                }
+            });
+
+            if (firstField) {
+                firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                try { firstField.focus({ preventScroll: true }); } catch (e) {}
+            }
+
+            // client-side simple validation to enhance UX
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    // optional: prevent submit if required fields empty and show toast
+                    const requiredNames = ['amount', 'date', 'account', 'category', 'description'];
+                    const missing = [];
+                    requiredNames.forEach(name => {
+                        const el = form.querySelector('[name="' + name + '"]');
+                        if (el && !el.value) missing.push(name);
+                    });
+                    if (missing.length) {
+                        e.preventDefault();
+                        createToast('Please fill required fields: ' + missing.join(', '));
+                        const first = form.querySelector('[name="' + missing[0] + '"]');
+                        if (first) first.classList.add('is-invalid');
+                        if (first) { first.scrollIntoView({behavior: 'smooth', block: 'center'}); try { first.focus(); } catch(err){} }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

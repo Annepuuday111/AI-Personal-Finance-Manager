@@ -1,0 +1,13 @@
+# env files
+.env
+
+# database
+db.sqlite3
+
+# python cache
+__pycache__/
+*.pyc
+
+# venv
+venv/
+.env/
