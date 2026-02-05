@@ -1,4 +1,4 @@
-# FinanceAI Django Project - Complete Setup Guide
+# FinanceAI Project - Complete Setup Guide
 
 ## Project Structure
 
