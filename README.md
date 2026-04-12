@@ -1,297 +1,130 @@
-# FinanceAI Project - Complete Setup Guide
+# 💰 FinanceAI: The Smart Way to Manage Your Money
 
-## Project Structure
+<p align="center">
+  <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django" />
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
+</p>
 
-```
-financeai/
-├── financeai/
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
-├── accounts/
-│   ├── migrations/
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── models.py
-│   ├── views.py
-│   ├── urls.py
-│   ├── apps.py
-│   └── tests.py
-├── templates/
-│   ├── account/
-│   │   ├── login.html
-│   │   └── signup.html
-│   └── accounts/
-│       ├── profile.html
-│       └── dashboard.html
-├── static/
-├── media/
-├── .env
-├── requirements.txt
-├── manage.py
-└── README.md
-```
+---
 
-## Installation Steps
+## 🚀 Overview
 
-### 1. Create Virtual Environment
+**FinanceAI** is a state-of-the-art personal finance management platform designed to help users take full control of their financial life. By combining modern banking integrations with advanced AI insights, we transform complex financial data into actionable wisdom.
 
+---
+
+## ⚡ The Problem
+
+Managing personal finances is often a chaotic and overwhelming task for many. Traditional methods suffer from:
+
+*   **Fragmented Data**: Transactions spread across multiple bank accounts and wallets.
+*   **Manual Entry Fatigue**: Spending hours logging every coffee or bill payment.
+*   **Lack of Insights**: Raw numbers don't tell you *why* you're overspending or *how* to save better.
+*   **Security Fears**: Concerns about data privacy and insecure authentication.
+*   **Complexity**: Most tools are designed for accountants, not everyday people.
+
+## 💡 The Solution
+
+**FinanceAI** bridges the gap between raw data and financial freedom. Our solution provides:
+
+*   **Centralized Hub**: View all your accounts, budgets, and goals in one unified dashboard.
+*   **AI-Powered Insights**: Get personalized advice on spending patterns and saving strategies.
+*   **Automated Tracking**: Effortless categorization of transactions using intelligent algorithms.
+*   **Military-Grade Security**: Secure OAuth login (Google & Facebook) and 2FA/OTP verification.
+*   **Goal-Oriented Planning**: Set and track financial milestones with real-time progress updates.
+
+---
+
+## 🛠️ The Tech Stack
+
+| Category | Tools & Technologies |
+| :--- | :--- |
+| **Backend** | ![Django](https://img.shields.io/badge/Django-092E20?style=flat-square&logo=django&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) |
+| **Frontend** | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white) ![JS](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) |
+| **AI/ML** | ![NLP](https://img.shields.io/badge/AI-Insight-8A2BE2) OpenAI API (Internal Integration) |
+| **Database** | ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white) (Dev) / PostgreSQL (Prod) |
+| **Security** | ![allauth](https://img.shields.io/badge/OAuth-Google%20%26%20Facebook-blue) OTP/Email Verification |
+
+---
+
+## ✨ Key Features
+
+- 🔐 **Secure Authentication**: Traditional login, Google OAuth, and Facebook integration.
+- 🛡️ **Two-Step Verification**: Email-based OTP for enhanced security during signup and login.
+- 📊 **Dynamic Dashboard**: Real-time visualization of your net worth, expenses, and budget status.
+- 🧠 **AI Insights**: Generate personalized financial reports and tips based on your spending.
+- 🎯 **Financial Goals**: Set targets for savings, vacations, or major purchases.
+- 📅 **Budget Management**: Create monthly budgets and receive alerts when you're close to limits.
+- 📱 **Fully Responsive**: Access your finances from any device—desktop, tablet, or mobile.
+
+---
+
+## 🔧 Installation & Setup
+
+### 1. Prerequisites
+Ensure you have Python 3.10+ installed on your system.
+
+### 2. Clone and Prepare
 ```bash
+# Clone the repository
+git clone https://github.com/Annepuuday111/ai_powered_personal_finance_management.git
+cd ai_powered_personal_finance_management
+
 # Create virtual environment
 python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate  # Windows
 ```
 
-### 2. Install Requirements
-
-Create `requirements.txt`:
-```
-Django>=4.2,<5.0
-django-allauth>=0.57.0
-python-decouple>=3.8
-pillow>=10.0.0
-```
-
-Install:
+### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Create Django Project (if not already created)
-
-```bash
-django-admin startproject financeai .
-python manage.py startapp accounts
-```
-
-### 4. Create .env File
-
-Create `.env` in project root:
-```
-SECRET_KEY=your-django-secret-key-change-this
+### 4. Configuration
+Create a `.env` file in the root directory:
+```env
+SECRET_KEY=your_secret_key
 DEBUG=True
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-FACEBOOK_APP_ID=your-facebook-app-id
-FACEBOOK_APP_SECRET=your-facebook-app-secret
+GOOGLE_CLIENT_ID=your_id
+GOOGLE_CLIENT_SECRET=your_secret
+# ... other OAuth keys
 ```
 
-Generate a secret key:
-```python
-python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-```
-
-### 5. Create Required Directories
-
-```bash
-mkdir templates
-mkdir templates/account
-mkdir templates/accounts
-mkdir static
-mkdir media
-```
-
-### 6. Update Settings
-
-Copy the settings configuration from the first artifact to `financeai/settings.py`
-
-### 7. Update URLs
-
-Copy the URL configuration from the first artifact to `financeai/urls.py`
-
-### 8. Update Models
-
-Copy the models from the first artifact to `accounts/models.py`
-
-### 9. Update Views
-
-Copy the views from the first artifact to `accounts/views.py`
-
-### 10. Update Admin
-
-Copy the admin configuration from the first artifact to `accounts/admin.py`
-
-### 11. Create URLs for Accounts
-
-Copy the URL patterns from the first artifact to `accounts/urls.py`
-
-### 12. Create Templates
-
-Copy the HTML templates to their respective locations:
-- `templates/account/login.html`
-- `templates/account/signup.html`
-- `templates/accounts/profile.html`
-- `templates/accounts/dashboard.html`
-
-### 13. Run Migrations
-
+### 5. Initialize Database
 ```bash
 python manage.py makemigrations
 python manage.py migrate
-```
-
-### 14. Create Superuser
-
-```bash
 python manage.py createsuperuser
 ```
 
-### 15. Configure Sites Framework
+---
 
-```bash
-python manage.py shell
-```
+## 📖 How to Use
 
-```python
-from django.contrib.sites.models import Site
-site = Site.objects.get(id=1)
-site.domain = '127.0.0.1:8000'
-site.name = 'FinanceAI'
-site.save()
-exit()
-```
-
-### 16. Run Development Server
-
-```bash
-python manage.py runserver
-```
-
-Visit: http://127.0.0.1:8000/
-
-## Setting Up OAuth (Google & Facebook)
-
-### Google OAuth Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable **Google+ API**
-4. Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client IDs**
-5. Configure OAuth consent screen
-6. Choose **Web application** as application type
-7. Add **Authorized redirect URIs**:
-   - `http://127.0.0.1:8000/accounts/google/login/callback/`
-   - `http://localhost:8000/accounts/google/login/callback/`
-8. Copy **Client ID** and **Client Secret** to `.env` file
-
-### Facebook OAuth Setup
-
-1. Go to [Facebook Developers](https://developers.facebook.com/)
-2. Create a new app (Choose **Consumer** type)
-3. Add **Facebook Login** product
-4. Go to **Settings** → **Basic**
-5. Copy **App ID** and **App Secret** to `.env` file
-6. In **Facebook Login** settings, add **Valid OAuth Redirect URIs**:
-   - `http://127.0.0.1:8000/accounts/facebook/login/callback/`
-   - `http://localhost:8000/accounts/facebook/login/callback/`
-
-### Configure Social Apps in Django Admin
-
-1. Login to admin: http://127.0.0.1:8000/admin/
-2. Navigate to **Social applications**
-3. Click **Add social application**
-
-**For Google:**
-- Provider: Google
-- Name: Google OAuth
-- Client id: (from Google Console)
-- Secret key: (from Google Console)
-- Sites: Select your site (127.0.0.1:8000)
-
-**For Facebook:**
-- Provider: Facebook
-- Name: Facebook Login
-- Client id: (Facebook App ID)
-- Secret key: (Facebook App Secret)
-- Sites: Select your site (127.0.0.1:8000)
-
-## Features
-
-✅ Email/Password Authentication
-✅ Google OAuth Login
-✅ Facebook OAuth Login
-✅ User Registration
-✅ Password Reset
-✅ User Profile
-✅ Dashboard
-✅ Social Account Management
-✅ Responsive Design
-✅ Modern UI/UX
-
-## Available URLs
-
-- `/` - Home (redirects to login)
-- `/accounts/login/` - Login page
-- `/accounts/signup/` - Signup page
-- `/accounts/profile/` - User profile (requires login)
-- `/accounts/dashboard/` - Dashboard (requires login)
-- `/accounts/logout/` - Logout
-- `/accounts/password/reset/` - Password reset
-- `/accounts/google/login/` - Google login
-- `/accounts/facebook/login/` - Facebook login
-- `/admin/` - Admin panel
-
-## Troubleshooting
-
-### Issue: Social login not working
-
-**Solution:** Make sure you've:
-1. Added OAuth credentials to `.env`
-2. Configured redirect URIs correctly in Google/Facebook
-3. Added social applications in Django admin
-4. Set correct site domain in Django Sites
-
-### Issue: Templates not found
-
-**Solution:** Check that:
-1. `TEMPLATES` `DIRS` includes `BASE_DIR / 'templates'` in settings.py
-2. Templates are in correct directories
-3. Template names match exactly (case-sensitive)
-
-### Issue: Static files not loading
-
-**Solution:** Run:
-```bash
-python manage.py collectstatic
-```
-
-## Security Considerations for Production
-
-1. Change `DEBUG = False` in production
-2. Use a strong, unique `SECRET_KEY`
-3. Update `ALLOWED_HOSTS` with your domain
-4. Use HTTPS for OAuth redirect URIs
-5. Set secure cookie settings
-6. Use environment variables for sensitive data
-7. Enable CSRF protection
-8. Use PostgreSQL instead of SQLite
-
-## Next Steps
-
-- Add email verification
-- Implement two-factor authentication
-- Add more financial features
-- Create API endpoints
-- Add data visualization
-- Implement budgeting features
-- Add expense tracking
-- Create financial reports
-
-## Support
-
-For issues or questions, please refer to the documentation:
-- [Django Documentation](https://docs.djangoproject.com/)
-- [Django-allauth Documentation](https://django-allauth.readthedocs.io/)
-- [Google OAuth Documentation](https://developers.google.com/identity/protocols/oauth2)
-- [Facebook Login Documentation](https://developers.facebook.com/docs/facebook-login/)
+1.  **Launch the App**: Run `python manage.py runserver` and navigate to `http://127.0.0.1:8000`.
+2.  **Sign Up/Login**: Create an account or use Google/Facebook for a 1-click login.
+3.  **Link Accounts**: Add your bank accounts and initial balances.
+4.  **Set Budgets**: Navigate to the **Budgets** tab to define your monthly spending categories.
+5.  **Track Transactions**: Add your daily expenses. The AI will automatically begin analyzing the data.
+6.  **Get AI Insights**: Visit the **AI Insights** page to see suggestions on how to optimize your spending.
 
 ---
 
-**Created with ❤️ for FinanceAI**# ai_powered_personal_finance_management
+## 🤝 Contributing
+
+We welcome contributions! Please feel free to submit a Pull Request.
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+---
+
+<p align="center">
+  Made with ❤️ by the FinanceAI Team
+</p>
