@@ -105,11 +105,24 @@ python manage.py createsuperuser
 ## 📖 How to Use
 
 1.  **Launch the App**: Run `python manage.py runserver` and navigate to `http://127.0.0.1:8000`.
-2.  **Sign Up/Login**: Create an account or use Google/Facebook for a 1-click login.
-3.  **Link Accounts**: Add your bank accounts and initial balances.
-4.  **Set Budgets**: Navigate to the **Budgets** tab to define your monthly spending categories.
-5.  **Track Transactions**: Add your daily expenses. The AI will automatically begin analyzing the data.
-6.  **Get AI Insights**: Visit the **AI Insights** page to see suggestions on how to optimize your spending.
+2.  **Sign Up/Login**:
+    *   **Registration**: Create an account and verify your email via the instant **OTP (One-Time Password)** sent to your inbox.
+    *   **Login**: Enter your credentials. For your security, a 6-digit verification code will be required to complete the sign-in.
+    *   **OAuth**: Use Google or Facebook for lightning-fast, secure 1-click access.
+3.  **Link Accounts**: Head to the **Bank Accounts** section to add your initial balances.
+4.  **Set Budgets**: Use the **Budgets** tab to define category-wise monthly limits.
+5.  **Track Transactions**: Log your income and expenses. The system automatically updates your net worth and budget progress.
+6.  **Get AI Insights**: Visit the **AI Insights** page to receive personalized, AI-driven financial strategies.
+
+---
+
+## 🔒 Security Highlights
+
+We prioritize your data security with a multi-layered defense system:
+- **Two-Factor Authentication (2FA)**: Mandatory OTP verification for both login and signup.
+- **Session Protection**: Intelligent session management to prevent unauthorized access.
+- **Fail-Safe OTP**: Integrated "Resend OTP" functionality to ensure you're never locked out.
+- **Encryption**: All sensitive data and passwords are cryptographically hashed and secured.
 
 ---
 
