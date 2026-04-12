@@ -357,8 +357,9 @@
             </div>
 
             <button type="submit" class="btn-primary">Verify & Login</button>
-            <div class="signup-link" style="margin-top: 15px;">
-                <a href="{% url 'accounts:reset_login' %}">Back to login</a>
+            <div class="signup-link" style="margin-top: 15px; display: flex; justify-content: space-between;">
+                <a href="{% url 'accounts:resend_otp' %}" style="color: #667eea; font-weight: 500;">Resend OTP</a>
+                <a href="{% url 'accounts:reset_login' %}" style="color: #666;">Back to login</a>
             </div>
         </form>
         {% else %}

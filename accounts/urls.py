@@ -43,4 +43,5 @@ urlpatterns = [
     path('categories/add/', views.add_category, name='add_category'),
     path('reset-login/', views.reset_login, name='reset_login'),
     path('verify-signup-otp/', views.verify_signup_otp, name='verify_signup_otp'),
+    path('resend-otp/', views.resend_otp, name='resend_otp'),
 ]

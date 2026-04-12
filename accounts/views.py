@@ -803,8 +803,64 @@ class CustomLoginView(LoginView):
                 return redirect('account_login')
         except EmailOTP.DoesNotExist:
             messages.error(request, 'OTP verification failed. Please login again.')
-            del request.session['otp_user_id']
+            if 'otp_user_id' in request.session:
+                del request.session['otp_user_id']
             return redirect('account_login')
+
+def resend_otp(request):
+    """Resend OTP for either login or signup"""
+    user_id = request.session.get('otp_user_id')
+    signup_email = request.session.get('otp_email')
+    
+    email = None
+    user = None
+    
+    if user_id:
+        user = get_object_or_404(User, id=user_id)
+        email = user.email
+    elif signup_email:
+        email = signup_email
+    else:
+        messages.error(request, "Session expired. Please try again.")
+        return redirect('account_login')
+
+    # Generate new OTP
+    otp_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    
+    # Update/Create OTP object
+    if user:
+        otp_obj, _ = EmailOTP.objects.get_or_create(user=user)
+    else:
+        otp_obj, _ = EmailOTP.objects.get_or_create(email=email)
+        
+    otp_obj.otp = otp_code
+    otp_obj.created_at = timezone.now()
+    otp_obj.is_verified = False
+    otp_obj.save()
+    
+    # Send Email
+    try:
+        subject = 'Your New Security OTP'
+        html_message = render_to_string('account/email_otp.html', {
+            'otp': otp_code,
+            'title': 'New Verification Code'
+        })
+        plain_message = strip_tags(html_message)
+        
+        threading.Thread(
+            target=send_mail,
+            args=(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [email]),
+            kwargs={'html_message': html_message}
+        ).start()
+        
+        messages.success(request, f"A new OTP has been sent to {email}")
+    except Exception as e:
+        messages.error(request, f"Error resending OTP: {str(e)}")
+        
+    if user_id:
+        return redirect('account_login')
+    else:
+        return redirect('accounts:verify_signup_otp')
 
 def reset_login(request):
     """Clear OTP session and return to login"""

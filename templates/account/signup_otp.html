@@ -122,6 +122,7 @@
         </form>
 
         <div class="restart-link">
+            <a href="{% url 'accounts:resend_otp' %}" style="display: block; margin-bottom: 10px;">Resend OTP</a>
             Entered the wrong email? <a href="{% url 'account_signup' %}">Restart Signup</a>
         </div>
     </div>
