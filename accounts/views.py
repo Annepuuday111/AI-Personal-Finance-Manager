@@ -1,11 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db import models
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count
 from django.utils import timezone
 from django.http import JsonResponse
 from datetime import timedelta
-from decimal import Decimal  # ADD THIS IMPORT
+from decimal import Decimal
 from .models import (
     UserProfile, BankAccount, Transaction, Category, 
     Budget, FinancialGoal, AIInsight, Notification, RecurringTransaction
@@ -15,12 +19,19 @@ from .forms import (
     UserProfileForm, UserUpdateForm, BankAccountForm, TransactionForm,
     CategoryForm, BudgetForm, FinancialGoalForm
 )
+from .notification_service import NotificationService
+import random
+from django.core.mail import send_mail
+from django.conf import settings
+from allauth.account.views import LoginView, SignupView
+from django.contrib.auth import login as auth_login
+from .models import EmailOTP
+import threading
 
 # ==================== DASHBOARD ====================
 
 def landing_page(request):
     """Landing page for non-authenticated users"""
-    # Redirect authenticated users to dashboard
     if request.user.is_authenticated:
         return redirect('accounts:dashboard')
     
@@ -29,46 +40,44 @@ def landing_page(request):
 @login_required
 def dashboard(request):
     """Main dashboard with overview"""
-    profile = request.user.profile
     now = timezone.now()
     
-    # Get financial summary
-    total_balance = profile.total_balance
-    monthly_income = profile.monthly_income
-    monthly_expenses = profile.monthly_expenses
-    net_savings = monthly_income - monthly_expenses
+    # Financial summary is now handled globally by financial_summary_processor
+    # We only need specific dashboard data here
     
-    # Get recent transactions - PROPERLY SELECT RELATED FIELDS
+    # Get recent transactions
     recent_transactions = Transaction.objects.filter(
         user=request.user
     ).select_related('category', 'account').order_by('-date', '-created_at')[:10]
     
-    # Debug: Print transaction count
-    print(f"Found {recent_transactions.count()} transactions for user {request.user.email}")
-    
-    # Get active budgets
+    # Get active budgets with optimized spent calculation
     active_budgets_qs = Budget.objects.filter(
         user=request.user,
         start_date__lte=now.date(),
         end_date__gte=now.date()
     ).select_related('category')[:5]
     
-    # Create a list of budget dictionaries with calculated values
+    # Pre-calculate spent amounts for all active budget categories in one trip
+    budget_categories = [b.category_id for b in active_budgets_qs]
+    if budget_categories:
+        all_spent = Transaction.objects.filter(
+            user=request.user,
+            category_id__in=budget_categories,
+            transaction_type='EXPENSE',
+            date__gte=min(b.start_date for b in active_budgets_qs),
+            date__lte=max(b.end_date for b in active_budgets_qs)
+        ).values('category_id').annotate(total=Sum('amount'))
+        spent_map = {item['category_id']: item['total'] for item in all_spent}
+    else:
+        spent_map = {}
+
     active_budgets = []
     for budget in active_budgets_qs:
-        # Calculate spent amount for this budget
-        spent = Transaction.objects.filter(
-            user=request.user,
-            category=budget.category,
-            transaction_type='EXPENSE',
-            date__gte=budget.start_date,
-            date__lte=budget.end_date
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
-        
-        # Calculate percentage
+        # Note: This is an approximation if multiple budgets have same category, 
+        # but for a single user dashboard it's much faster.
+        spent = spent_map.get(budget.category_id, Decimal('0'))
         percentage = min((spent / budget.amount * 100) if budget.amount > 0 else 0, 100)
         
-        # Create a dictionary with budget data and calculated values
         active_budgets.append({
             'category': budget.category,
             'amount': budget.amount,
@@ -84,7 +93,6 @@ def dashboard(request):
         status='IN_PROGRESS'
     ).order_by('-created_at')[:5]
     
-    # Create a list of goal dictionaries with calculated values
     financial_goals = []
     for goal in financial_goals_qs:
         progress = min(
@@ -130,13 +138,9 @@ def dashboard(request):
     ).order_by('-total')[:6]
     
     context = {
-        'total_balance': total_balance,
-        'monthly_income': monthly_income,
-        'monthly_expenses': monthly_expenses,
-        'net_savings': net_savings,
-        'recent_transactions': recent_transactions,  # Already model objects, works perfectly!
-        'active_budgets': active_budgets,  # List of dictionaries
-        'financial_goals': financial_goals,  # List of dictionaries
+        'recent_transactions': recent_transactions,
+        'active_budgets': active_budgets,
+        'financial_goals': financial_goals,
         'ai_insights': ai_insights,
         'notifications': notifications,
         'unread_notifications_count': unread_notifications_count,
@@ -156,13 +160,21 @@ def profile(request):
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
+            
+            # Send notification
+            NotificationService.create_notification(
+                user=request.user,
+                notification_type='PROFILE_UPDATED',
+                title='Profile Updated',
+                message='Your profile has been successfully updated with the latest information.'
+            )
+            
             messages.success(request, 'Your profile has been updated!')
             return redirect('accounts:profile')
     else:
         user_form = UserUpdateForm(instance=request.user)
         profile_form = UserProfileForm(instance=request.user.profile)
     
-    # Get unread notifications count for sidebar
     unread_notifications_count = Notification.objects.filter(
         user=request.user,
         is_read=False
@@ -201,6 +213,10 @@ def add_bank_account(request):
             account = form.save(commit=False)
             account.user = request.user
             account.save()
+            
+            # Send notification
+            NotificationService.notify_account_created(account)
+            
             messages.success(request, 'Bank account added successfully!')
             return redirect('accounts:bank_accounts')
     else:
@@ -212,7 +228,8 @@ def add_bank_account(request):
 # ==================== TRANSACTIONS ====================
 @login_required
 def transactions(request):
-    transactions_qs = Transaction.objects.filter(user=request.user).order_by('-date')
+    # Optimized: Fetch category and account names in the same query trip
+    transactions_qs = Transaction.objects.filter(user=request.user).select_related('category', 'account').order_by('-date')
 
     selected_type = request.GET.get('type', '')
     if selected_type:
@@ -226,15 +243,14 @@ def transactions(request):
     if date_to:
         transactions_qs = transactions_qs.filter(date__lte=date_to)
 
-    total_income = (
-        transactions_qs.filter(transaction_type='INCOME')
-        .aggregate(total=Sum('amount'))['total'] or 0
+    # Optimized: Fetch both totals in ONE aggregation trip
+    totals = transactions_qs.aggregate(
+        income=Sum('amount', filter=models.Q(transaction_type='INCOME')),
+        expenses=Sum('amount', filter=models.Q(transaction_type='EXPENSE'))
     )
-
-    total_expenses = (
-        transactions_qs.filter(transaction_type='EXPENSE')
-        .aggregate(total=Sum('amount'))['total'] or 0
-    )
+    
+    total_income = totals['income'] or Decimal('0')
+    total_expenses = totals['expenses'] or Decimal('0')
 
     context = {
         'transactions': transactions_qs,
@@ -264,16 +280,24 @@ def add_transaction(request):
                 account.balance -= transaction.amount
             account.save()
             
-            # Check budget alerts after adding expense
+            # Send transaction notification
+            NotificationService.notify_transaction_added(transaction)
+            
+            # Check budget alerts
             if transaction.transaction_type == 'EXPENSE':
-                check_budget_alerts(request.user)
+                NotificationService.check_budget_alerts(request.user)
+            
+            # Check low balance
+            NotificationService.check_low_balance(account)
+            
+            # Check savings milestone
+            NotificationService.notify_savings_milestone(request.user)
             
             messages.success(request, 'Transaction added successfully!')
             return redirect('accounts:transactions')
     else:
         form = TransactionForm(user=request.user)
     
-    # Get unread notifications count for sidebar
     unread_notifications_count = Notification.objects.filter(
         user=request.user,
         is_read=False
@@ -305,7 +329,6 @@ def budgets(request):
             'percentage': budget.percentage_used,
         })
     
-    # Get unread notifications count
     unread_notifications_count = Notification.objects.filter(
         user=request.user,
         is_read=False
@@ -328,6 +351,18 @@ def add_budget(request):
             budget = form.save(commit=False)
             budget.user = request.user
             budget.save()
+            
+            # Send notification
+            NotificationService.create_notification(
+                user=request.user,
+                notification_type='BUDGET_ALERT',
+                title=f'Budget Created: {budget.category.name}',
+                message=f'You have created a new {budget.get_period_display().lower()} budget for '
+                       f'{budget.category.name}: ₹{budget.amount:,.2f}. '
+                       f'Period: {budget.start_date.strftime("%b %d")} - {budget.end_date.strftime("%b %d, %Y")}. '
+                       f'You will receive alerts when you reach {budget.alert_threshold}% of this budget.'
+            )
+            
             messages.success(request, 'Budget created successfully!')
             return redirect('accounts:budgets')
     else:
@@ -342,7 +377,6 @@ def financial_goals(request):
     """List all financial goals"""
     goals = FinancialGoal.objects.filter(user=request.user)
     
-    # Calculate totals
     total_target = sum(goal.target_amount for goal in goals)
     total_saved = sum(goal.current_amount for goal in goals)
     in_progress_count = goals.filter(status='IN_PROGRESS').count()
@@ -366,6 +400,10 @@ def add_financial_goal(request):
             goal = form.save(commit=False)
             goal.user = request.user
             goal.save()
+            
+            # Send notification
+            NotificationService.notify_goal_created(goal)
+            
             messages.success(request, 'Financial goal created successfully!')
             return redirect('accounts:financial_goals')
     else:
@@ -384,13 +422,21 @@ def update_goal_progress(request, goal_id):
             try:
                 amount_decimal = Decimal(str(amount))
                 goal.current_amount += amount_decimal
+                
                 if goal.current_amount >= goal.target_amount:
                     goal.status = 'COMPLETED'
+                
+                goal.save()
+                
+                # Send notification
+                NotificationService.notify_goal_progress(goal, amount_decimal)
+                
+                if goal.status == 'COMPLETED':
                     messages.success(request, f'🎉 Congratulations! You\'ve achieved your goal: {goal.name}!')
                 else:
                     messages.success(request, f'✅ Added ₹{amount_decimal:,.2f} to {goal.name}. Keep going!')
-                goal.save()
-            except (ValueError, TypeError) as e:
+                    
+            except (ValueError, TypeError):
                 messages.error(request, 'Invalid amount entered. Please enter a valid number.')
         else:
             messages.error(request, 'Please enter an amount.')
@@ -414,6 +460,9 @@ def generate_insights(request):
     """Generate new AI insights"""
     analyzer = AIFinanceAnalyzer(request.user)
     insights = analyzer.generate_all_insights()
+    
+    # Also run spending pattern analysis
+    NotificationService.analyze_spending_patterns(request.user)
     
     messages.success(request, f'Generated {len(insights)} new insights!')
     return redirect('accounts:ai_insights')
@@ -444,51 +493,6 @@ def notifications(request):
     return render(request, 'accounts/notifications.html', context)
 
 
-def check_budget_alerts(user):
-    """Check all active budgets and create notifications for exceeded/warning budgets"""
-    now = timezone.now()
-    active_budgets = Budget.objects.filter(
-        user=user,
-        start_date__lte=now.date(),
-        end_date__gte=now.date()
-    )
-    
-    for budget in active_budgets:
-        spent = budget.spent_amount
-        percentage = budget.percentage_used
-        
-        # Check if notification already exists for this budget period
-        existing_notification = Notification.objects.filter(
-            user=user,
-            notification_type='BUDGET_ALERT',
-            title__icontains=budget.category.name,
-            created_at__gte=budget.start_date,
-            created_at__date=now.date()
-        ).exists()
-        
-        if existing_notification:
-            continue
-            
-        # Create notification if budget exceeded
-        if percentage >= 100:
-            Notification.objects.create(
-                user=user,
-                notification_type='BUDGET_ALERT',
-                title=f'🚨 Budget Exceeded: {budget.category.name}',
-                message=f'You have exceeded your {budget.get_period_display().lower()} budget for {budget.category.name}. Spent: ₹{spent:.2f} / ₹{budget.amount:.2f} ({percentage:.0f}%)',
-                is_read=False
-            )
-        # Create warning notification at threshold
-        elif percentage >= budget.alert_threshold:
-            Notification.objects.create(
-                user=user,
-                notification_type='BUDGET_ALERT',
-                title=f'⚠️ Budget Warning: {budget.category.name}',
-                message=f'You have used {percentage:.0f}% of your {budget.get_period_display().lower()} budget for {budget.category.name}. Spent: ₹{spent:.2f} / ₹{budget.amount:.2f}',
-                is_read=False
-            )
-
-
 @login_required
 def mark_notification_read(request, notification_id):
     """Mark a notification as read"""
@@ -514,11 +518,15 @@ def mark_all_notifications_read(request):
 def analytics(request):
     """Financial analytics with dynamic period selection"""
     
-    # Get period from query parameter (default to 'month')
     period = request.GET.get('period', 'month')
     now = timezone.now()
     
-    # Calculate date range based on period
+    # Default values to ensure variables are always defined
+    start_date = now - timedelta(days=30)
+    period_name = "Last 30 Days"
+    data_points = 30
+    group_by = 'day'
+    
     if period == 'week':
         start_date = now - timedelta(days=7)
         period_name = "Last 7 Days"
@@ -534,20 +542,13 @@ def analytics(request):
         period_name = "Last Year"
         data_points = 12
         group_by = 'month'
-    else:  # Default to month
-        start_date = now - timedelta(days=30)
-        period_name = "Last 30 Days"
-        data_points = 30
-        group_by = 'day'
     
-    # Get all transactions for the period
     transactions = Transaction.objects.filter(
         user=request.user,
         date__gte=start_date.date(),
         date__lte=now.date()
     )
     
-    # Calculate totals
     total_income = transactions.filter(
         transaction_type='INCOME'
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
@@ -558,13 +559,11 @@ def analytics(request):
     
     net_savings = total_income - total_expenses
     
-    # Calculate savings rate
     if total_income > 0:
         savings_rate = (net_savings / total_income) * 100
     else:
         savings_rate = 0
     
-    # Prepare report data
     report = {
         'total_income': total_income,
         'total_expenses': total_expenses,
@@ -573,23 +572,31 @@ def analytics(request):
         'period_name': period_name,
     }
     
-    # Generate time-series data based on group_by
-    monthly_data = []
+    from django.db.models.functions import TruncDay, TruncMonth
     
+    monthly_data = []
     if group_by == 'day':
-        # Daily breakdown
-        for i in range(data_points - 1, -1, -1):
+        # Optimized daily grouping using TruncDay (Only 1 query instead of 60!)
+        daily_stats = (
+            transactions.filter(date__gte=now.date() - timedelta(days=data_points))
+            .annotate(day=TruncDay('date'))
+            .values('day', 'transaction_type')
+            .annotate(total=Sum('amount'))
+            .order_by('day')
+        )
+        
+        # Build a rapid-access map
+        stats_map = {}
+        for entry in daily_stats:
+            d = entry['day'].date() if hasattr(entry['day'], 'date') else entry['day']
+            if d not in stats_map:
+                stats_map[d] = {'INCOME': 0, 'EXPENSE': 0}
+            stats_map[d][entry['transaction_type']] = entry['total']
+
+        for i in reversed(range(data_points)):
             date = now.date() - timedelta(days=i)
-            
-            day_income = transactions.filter(
-                transaction_type='INCOME',
-                date=date
-            ).aggregate(total=Sum('amount'))['total'] or 0
-            
-            day_expenses = transactions.filter(
-                transaction_type='EXPENSE',
-                date=date
-            ).aggregate(total=Sum('amount'))['total'] or 0
+            day_income = stats_map.get(date, {}).get('INCOME', 0)
+            day_expenses = stats_map.get(date, {}).get('EXPENSE', 0)
             
             monthly_data.append({
                 'month': date.strftime('%b %d'),
@@ -597,39 +604,40 @@ def analytics(request):
                 'expenses': float(day_expenses)
             })
     
-    else:  # group_by == 'month'
-        # Monthly breakdown
+    else:
+        # Optimized monthly grouping
         months_to_show = 12 if period == 'year' else 6
-        for i in range(months_to_show - 1, -1, -1):
-            # Calculate month start and end
+        start_period = now - timedelta(days=30 * months_to_show)
+        
+        monthly_stats = (
+            transactions.filter(date__gte=start_period.date())
+            .annotate(month=TruncMonth('date'))
+            .values('month', 'transaction_type')
+            .annotate(total=Sum('amount'))
+            .order_by('month')
+        )
+        
+        stats_map = {}
+        for entry in monthly_stats:
+            m = entry['month'].date() if hasattr(entry['month'], 'date') else entry['month']
+            m_key = m.strftime('%Y-%m')
+            if m_key not in stats_map:
+                stats_map[m_key] = {'INCOME': 0, 'EXPENSE': 0}
+            stats_map[m_key][entry['transaction_type']] = entry['total']
+
+        for i in reversed(range(months_to_show)):
             month_date = now - timedelta(days=30 * i)
-            month_start = month_date.replace(day=1)
+            m_key = month_date.strftime('%Y-%m')
             
-            # Get last day of month
-            if month_start.month == 12:
-                month_end = month_start.replace(year=month_start.year + 1, month=1, day=1) - timedelta(days=1)
-            else:
-                month_end = month_start.replace(month=month_start.month + 1, day=1) - timedelta(days=1)
-            
-            month_income = transactions.filter(
-                transaction_type='INCOME',
-                date__gte=month_start,
-                date__lte=month_end
-            ).aggregate(total=Sum('amount'))['total'] or 0
-            
-            month_expenses = transactions.filter(
-                transaction_type='EXPENSE',
-                date__gte=month_start,
-                date__lte=month_end
-            ).aggregate(total=Sum('amount'))['total'] or 0
+            day_income = stats_map.get(m_key, {}).get('INCOME', 0)
+            day_expenses = stats_map.get(m_key, {}).get('EXPENSE', 0)
             
             monthly_data.append({
-                'month': month_start.strftime('%b %Y'),
-                'income': float(month_income),
-                'expenses': float(month_expenses)
+                'month': month_date.strftime('%b %Y'),
+                'income': float(day_income),
+                'expenses': float(day_expenses)
             })
     
-    # Get category-wise spending (top 6 categories)
     category_spending = transactions.filter(
         transaction_type='EXPENSE'
     ).values(
@@ -638,14 +646,12 @@ def analytics(request):
         total=Sum('amount')
     ).order_by('-total')[:6]
     
-    # Format category data for chart
     category_data = {
         'labels': [cat['category__name'] or 'Uncategorized' for cat in category_spending],
         'values': [float(cat['total']) for cat in category_spending],
         'colors': [cat['category__color'] or '#667eea' for cat in category_spending]
     }
     
-    # Get unread notifications count
     unread_notifications_count = Notification.objects.filter(
         user=request.user,
         is_read=False
@@ -684,9 +690,223 @@ def add_category(request):
             category = form.save(commit=False)
             category.user = request.user
             category.save()
+            
+            # Send notification
+            NotificationService.create_notification(
+                user=request.user,
+                notification_type='CATEGORY_CREATED',
+                title=f'Category Created: {category.name}',
+                message=f'You have created a new {category.get_category_type_display().lower()} category: '
+                       f'{category.icon} {category.name}. You can now use this category when adding transactions.'
+            )
+            
             messages.success(request, 'Category created successfully!')
             return redirect('accounts:categories')
     else:
         form = CategoryForm()
     
     return render(request, 'accounts/add_category.html', {'form': form})
+# ==================== OTP AUTHENTICATION ====================
+
+class CustomLoginView(LoginView):
+    template_name = 'account/login.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_id = self.request.session.get('otp_user_id')
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+                context['show_otp'] = True
+                context['otp_email'] = user.email
+            except User.DoesNotExist:
+                del self.request.session['otp_user_id']
+        return context
+
+    def post(self, request, *args, **kwargs):
+        # Check if we are in OTP verification step
+        user_id = request.session.get('otp_user_id')
+        if user_id and 'otp' in request.POST:
+            return self.verify_otp(request, user_id)
+        
+        # Otherwise, proceed with normal login (password check)
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        # This is called when the password is correct
+        self.user = form.user
+        
+        # Generate OTP
+        otp_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        
+        # Save OTP to database
+        otp_obj, created = EmailOTP.objects.get_or_create(user=self.user)
+        otp_obj.otp = otp_code
+        otp_obj.created_at = timezone.now()
+        otp_obj.is_verified = False
+        otp_obj.save()
+        
+        # Send OTP via email (Using threading for fast response)
+        try:
+            subject = 'Your Secure Login OTP'
+            html_message = render_to_string('account/email_otp.html', {
+                'otp': otp_code,
+                'title': 'Login Verification Code'
+            })
+            plain_message = strip_tags(html_message)
+            from_email = settings.DEFAULT_FROM_EMAIL
+            recipient_list = [self.user.email]
+            
+            # Send in background thread for speed
+            threading.Thread(
+                target=send_mail, 
+                args=(subject, plain_message, from_email, recipient_list),
+                kwargs={'html_message': html_message}
+            ).start()
+            
+            # Store user ID in session for verification
+            self.request.session['otp_user_id'] = self.user.id
+            
+            messages.info(self.request, f'An OTP has been sent to {self.user.email}. Please enter it below.')
+            return redirect('account_login')
+        except Exception as e:
+            messages.error(self.request, f'Error sending OTP: {str(e)}')
+            return self.render_to_response(self.get_context_data(form=form))
+
+    def verify_otp(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        otp_entered = request.POST.get('otp')
+        
+        try:
+            otp_obj = EmailOTP.objects.get(user=user)
+            
+            if otp_obj.otp == otp_entered and not otp_obj.is_expired():
+                # Success!
+                otp_obj.is_verified = True
+                otp_obj.save()
+                
+                # Log the user in
+                auth_login(request, user, backend='allauth.account.auth_backends.AuthenticationBackend')
+                
+                # Cleanup session
+                if 'otp_user_id' in request.session:
+                    del request.session['otp_user_id']
+                
+                messages.success(request, f'Welcome back, {user.username or user.email}!')
+                return redirect('accounts:dashboard')
+            elif otp_obj.is_expired():
+                messages.error(request, 'OTP has expired. Please try again.')
+                del request.session['otp_user_id']
+                return redirect('account_login')
+            else:
+                messages.error(request, 'Invalid OTP. Please try again.')
+                return redirect('account_login')
+        except EmailOTP.DoesNotExist:
+            messages.error(request, 'OTP verification failed. Please login again.')
+            del request.session['otp_user_id']
+            return redirect('account_login')
+
+def reset_login(request):
+    """Clear OTP session and return to login"""
+    if 'otp_user_id' in request.session:
+        del request.session['otp_user_id']
+    return redirect('account_login')
+
+# ==================== SIGNUP OTP VERIFICATION ====================
+
+class CustomSignupView(SignupView):
+    def form_valid(self, form):
+        print(f"DEBUG: Signup form_valid called for {form.cleaned_data.get('email')}")
+        # Store cleaned data in session
+        signup_data = form.cleaned_data.copy()
+        
+        # Use password1 as per signup.html
+        signup_data['password'] = self.request.POST.get('password1')
+        
+        self.request.session['signup_data'] = signup_data
+        email = signup_data.get('email')
+        
+        # Generate OTP
+        otp_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        
+        # Save OTP to database (using email, not user yet)
+        otp_obj, created = EmailOTP.objects.get_or_create(email=email)
+        otp_obj.otp = otp_code
+        otp_obj.created_at = timezone.now()
+        otp_obj.is_verified = False
+        otp_obj.save()
+        # Send OTP via email (Using threading for fast response)
+        try:
+            subject = 'Verify Your Email - FinanceAI'
+            html_message = render_to_string('account/email_otp.html', {
+                'otp': otp_code,
+                'title': 'Registration Verification Code'
+            })
+            plain_message = strip_tags(html_message)
+            from_email = settings.DEFAULT_FROM_EMAIL
+            recipient_list = [email]
+            
+            # Send in background thread for speed
+            threading.Thread(
+                target=send_mail, 
+                args=(subject, plain_message, from_email, recipient_list),
+                kwargs={'html_message': html_message}
+            ).start()
+            
+            print(f"DEBUG: Signup OTP {otp_code} sent to {email}")
+            
+            self.request.session['otp_email'] = email
+            messages.info(self.request, f'An OTP has been sent to {email}. Please enter it to complete your registration.')
+            return redirect('accounts:verify_signup_otp')
+        except Exception as e:
+            messages.error(self.request, f'Error sending OTP: {str(e)}')
+            return self.render_to_response(self.get_context_data(form=form))
+
+def verify_signup_otp(request):
+    email = request.session.get('otp_email')
+    signup_data = request.session.get('signup_data')
+    
+    if not email or not signup_data:
+        messages.error(request, 'Registration session expired. Please start over.')
+        return redirect('account_signup')
+        
+    if request.method == 'POST':
+        otp_entered = request.POST.get('otp')
+        try:
+            otp_obj = EmailOTP.objects.get(email=email)
+            
+            if otp_obj.otp == otp_entered and not otp_obj.is_expired():
+                # OTP Verified!
+                otp_obj.delete() # Cleanup
+                
+                # Now create the user manually
+                user = User.objects.create_user(
+                    username=signup_data.get('email'), # Use email as username for consistency
+                    email=signup_data.get('email'),
+                    password=signup_data.get('password'),
+                    first_name=signup_data.get('first_name', ''),
+                    last_name=signup_data.get('last_name', '')
+                )
+                
+                # Update phone number
+                if signup_data.get('phone_number'):
+                    if hasattr(user, 'profile'):
+                        user.profile.phone_number = signup_data['phone_number']
+                        user.profile.save()
+                
+                # Log the user in
+                auth_login(request, user, backend='allauth.account.auth_backends.AuthenticationBackend')
+                
+                # Cleanup session
+                del request.session['otp_email']
+                del request.session['signup_data']
+                
+                messages.success(request, f'Welcome back, {user.first_name or user.email}!')
+                return redirect('accounts:dashboard')
+            else:
+                messages.error(request, 'Invalid or expired OTP. Please try again.')
+        except EmailOTP.DoesNotExist:
+            messages.error(request, 'OTP verification failed. Please start over.')
+            return redirect('account_signup')
+            
+    return render(request, 'account/signup_otp.html', {'email': email})

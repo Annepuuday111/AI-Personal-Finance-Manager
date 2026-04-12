@@ -41,4 +41,6 @@ urlpatterns = [
     # Categories
     path('categories/', views.categories, name='categories'),
     path('categories/add/', views.add_category, name='add_category'),
+    path('reset-login/', views.reset_login, name='reset_login'),
+    path('verify-signup-otp/', views.verify_signup_otp, name='verify_signup_otp'),
 ]

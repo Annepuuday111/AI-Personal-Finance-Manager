@@ -25,13 +25,16 @@ def send_message(request):
 
     try:
         client = Groq(api_key=api_key)
+        
+        # Get user's name for personalization
+        user_name = request.user.first_name if request.user.first_name else request.user.username
 
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",  # ✅ VALID FREE MODEL
             messages=[
                 {
                     "role": "system",
-                    "content": "You are FinanceAI, a helpful personal finance assistant."
+                    "content": f"You are FinanceAI, a helpful personal finance assistant. You are currently talking to {user_name}. Always be professional and friendly. If they say hi or hello, greet them by their name: {user_name}."
                 },
                 {
                     "role": "user",

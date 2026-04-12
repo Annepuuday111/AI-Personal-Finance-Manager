@@ -1,1023 +1,154 @@
+{% extends 'accounts/base_dashboard.html' %}
 {% load humanize %}
 {% load insight_extras %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Insights - FinanceAI</title>
-    <style>
-        :root {
-            --primary-color: #1e40af;
-            --primary-dark: #1e3a8a;
-            --primary-light: #3b82f6;
-            --secondary-color: #059669;
-            --accent-color: #ea580c;
-            --danger-color: #dc2626;
-            --success-color: #16a34a;
-            --warning-color: #d97706;
-            --info-color: #0891b2;
-            --purple-color: #7c3aed;
-            --pink-color: #db2777;
-            --gray-50: #f8fafc;
-            --gray-100: #f1f5f9;
-            --gray-200: #e2e8f0;
-            --gray-300: #cbd5e1;
-            --gray-400: #94a3b8;
-            --gray-500: #64748b;
-            --gray-600: #475569;
-            --gray-700: #334155;
-            --gray-800: #1e293b;
-            --gray-900: #0f172a;
-            --sidebar-width: 280px;
-            --border-radius: 12px;
-            --border-radius-lg: 16px;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
-            min-height: 100vh;
-            color: var(--gray-800);
-            line-height: 1.6;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dashboard-layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 50%, var(--purple-color) 100%);
-            color: white;
-            padding: 0;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-xl);
-            z-index: 1000;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-        }
-
-        .sidebar-header {
-            padding: 32px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .sidebar-header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .sidebar-header p {
-            font-size: 14px;
-            opacity: 0.8;
-            font-weight: 400;
-        }
-
-        .sidebar-menu {
-            padding: 24px 0;
-        }
-
-        .menu-section {
-            margin-bottom: 32px;
-        }
-
-        .menu-section-title {
-            padding: 0 24px;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            opacity: 0.7;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 14px 24px;
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            gap: 14px;
-            position: relative;
-            border-radius: 0 24px 24px 0;
-            margin: 2px 8px 2px 0;
-        }
-
-        .menu-item:hover,
-        .menu-item.active {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .menu-item i {
-            font-size: 20px;
-            width: 24px;
-            transition: transform 0.3s ease;
-        }
-
-        .menu-item:hover i {
-            transform: scale(1.1);
-        }
-
-        .sidebar-footer {
-            padding: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: auto;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-        }
-
-        .user-profile:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .user-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .user-info h4 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .user-info p {
-            font-size: 13px;
-            opacity: 0.8;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 30px;
-            max-width: 1400px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .page-header h2 {
-            color: #333;
-            font-size: 32px;
-            margin-bottom: 5px;
-        }
-                /* clamp to 4 lines to keep cards short */
-                display: -webkit-box;
-                -webkit-line-clamp: 4;
-            font-size: 16px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        /* Filter Tabs */
-        .filter-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: white;
-            padding: 10px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            overflow-x: auto;
-        }
-
-        .filter-tab {
-            padding: 10px 20px;
-            border-radius: 8px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            color: #666;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .filter-tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        /* Insights Grid */
-        .insights-grid {
-            display: grid;
-            gap: 24px;
-            grid-template-columns: repeat(1, 1fr);
-            align-items: start;
-        }
-
-        @media (min-width: 768px) {
-            .insights-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (min-width: 1200px) {
-            .insights-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-
-        .insight-card {
-            background: white;
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-            transition: transform 0.24s ease, box-shadow 0.24s ease;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .insight-card .insight-top {
-            display:flex;
-            justify-content:space-between;
-            gap:12px;
-            align-items:flex-start;
-        }
-
-        .insight-source {
-            font-size:12px;
-            color:var(--gray-600);
-            background:var(--gray-100);
-            padding:6px 10px;
-            border-radius:999px;
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-        }
-
-        .insight-description {
-            color: #666;
-            font-size: 15px;
-            line-height: 1.8;
-            margin-bottom: 20px;
-            white-space: pre-line;
-            max-height: 140px;
-            overflow: auto;
-            padding-right: 6px;
-        }
-
-        .insight-card a.source-link {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        .insight-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
-        }
-
-        .insight-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-        }
-
-        .insight-card[data-type="SPENDING"]::before {
-            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .insight-card[data-type="SAVING"]::before {
-            background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
-        }
-
-        .insight-card[data-type="BUDGET"]::before {
-            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
-        }
-
-        .insight-card[data-type="PREDICTION"]::before {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .insight-card[data-type="RECOMMENDATION"]::before {
-            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .insight-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-
-        .insight-type-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin-bottom: 12px;
-            flex: 0 0 auto;
-        }
-
-        @media (min-width: 1200px) {
-            .insight-type-icon { width:72px; height:72px; font-size:32px; }
-        }
-
-        .icon-spending {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .icon-saving {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-
-        .icon-budget {
-            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-        }
-
-        .icon-prediction {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .icon-recommendation {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .insight-meta {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .priority-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .priority-1 {
-            background: #e0e7ff;
-            color: #3730a3;
-        }
-
-        .priority-2 {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .priority-3 {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .priority-4 {
-            background: #fed7aa;
-            color: #9a3412;
-        }
-
-        .priority-5 {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .read-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .insight-title {
-            font-size: 20px;
-            color: #333;
-            font-weight: 700;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-
-        .insight-description {
-            color: #666;
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 12px;
-            white-space: pre-line;
-            flex: 0 0 auto;
-            /* clamp to 4 lines */
-            display: -webkit-box;
-            -webkit-line-clamp: 4;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            position: relative;
-            padding-right: 6px;
-        }
-
-        .insight-card.expanded .insight-description {
-            -webkit-line-clamp: unset;
-            max-height: none;
-            overflow: visible;
-        }
-
-        .read-more-btn {
-            background: transparent;
-            border: none;
-            color: var(--primary-color);
-            font-weight: 700;
-            cursor: pointer;
-            padding: 6px 0;
-            align-self: flex-start;
-        }
-
-        .insight-fade {
-            content: '';
-            position: absolute;
-            left: 18px;
-            right: 18px;
-            bottom: 62px; /* above footer area */
-            height: 36px;
-            pointer-events: none;
-            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 80%);
-        }
-
-        .insight-card.expanded .insight-fade { display: none; }
-
-        .insight-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .insight-date {
-            font-size: 13px;
-            color: #999;
-        }
-
-        .insight-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 13px;
-            border-radius: 8px;
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .empty-state-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-20px);
-            }
-        }
-
-        .empty-state h3 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 15px;
-        }
-
-        .empty-state p {
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 30px;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Stats Summary */
-        .stats-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-        }
-
-        .stat-number {
-            font-size: 36px;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Category badges */
-        .category-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-left: 10px;
-        }
-
-        .badge-market {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
-
-        .badge-banking {
-            background: #ddd6fe;
-            color: #5b21b6;
-        }
-
-        .badge-stocks {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-
-            .insight-title {
-                font-size: 18px;
-            }
-
-            .insight-footer {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
-        }
-
-        /* Page header actions */
-        .page-actions {
-            margin-left: auto;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .btn-generate {
-            padding: 10px 16px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        @media (max-width: 768px) {
-            .page-header { align-items: flex-start; }
-            .page-actions { width: 100%; justify-content: flex-end; margin-left: 0; }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="dashboard-layout">
-        <!-- Mobile Menu Toggle -->
-        <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-            <i>☰</i>
-        </button>
-
-        <!-- Sidebar Overlay -->
-        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-        
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h1>FinanceAI</h1>
-                <p>Smart Finance Manager</p>
-            </div>
-
-            <nav class="sidebar-menu">
-                <div class="menu-section">
-                    <div class="menu-section-title">Main</div>
-                    <a href="{% url 'accounts:dashboard' %}" class="menu-item active">
-                        <i>📊</i> Dashboard
-                    </a>
-                    <a href="{% url 'accounts:transactions' %}" class="menu-item">
-                        <i>💸</i> Transactions
-                    </a>
-                    <a href="{% url 'accounts:bank_accounts' %}" class="menu-item">
-                        <i>🏦</i> Bank Accounts
-                    </a>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-section-title">Planning</div>
-                    <a href="{% url 'accounts:budgets' %}" class="menu-item">
-                        <i>💰</i> Budgets
-                    </a>
-                    <a href="{% url 'accounts:financial_goals' %}" class="menu-item">
-                        <i>🎯</i> Goals
-                    </a>
-                    <a href="{% url 'accounts:categories' %}" class="menu-item">
-                        <i>📑</i> Categories
-                    </a>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-section-title">Insights</div>
-                    <a href="{% url 'accounts:ai_insights' %}" class="menu-item">
-                        <i>🤖</i> AI Insights
-                    </a>
-                    <a href="{% url 'accounts:analytics' %}" class="menu-item">
-                        <i>📈</i> Analytics
-                    </a>
-                    <a href="{% url 'accounts:notifications' %}" class="menu-item{% if request.resolver_match.url_name == 'notifications' %} active{% endif %}">
-                        <i>🔔</i> Notifications
-                        {% if unread_notifications_count > 0 %}
-                        <span style="background: #ef4444; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: auto;">{{ unread_notifications_count }}</span>
-                        {% endif %}
-                    </a>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-section-title">Settings</div>
-
-                    <a href="{% url 'accounts:profile' %}" class="menu-item">
-                        <i>⚙️</i> Settings
-                    </a>
-
-                    <a href="{% url 'chat:chat_home' %}" class="menu-item">
-                        <i>💬</i> Chat
-                    </a>
-
-                    <a href="{% url 'account_logout' %}" class="menu-item">
-                        <i>🚪</i> Logout
-                    </a>
-                </div>
-            </nav>
-
-            <div class="sidebar-footer">
-                <div class="user-profile">
-                    <div class="user-avatar">{{ user.first_name.0|upper|default:user.email.0|upper }}</div>
-                    <div class="user-info">
-                        <h4>{{ user.first_name|default:user.email|truncatechars:15 }}</h4>
-                        <p>{{ user.email|truncatechars:20 }}</p>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="page-header">
-                <div>
-                    <h2>🤖 AI Financial Insights</h2>
-                    <p>Personalized recommendations powered by AI • Market trends • Investment opportunities</p>
-                </div>
-                <div class="page-actions">
-                    <a href="{% url 'accounts:generate_insights' %}" class="btn btn-primary btn-generate" aria-label="Generate New Insights">
-                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                        Generate New Insights
-                    </a>
-                </div>
-            </div>
-
-            {% if insights %}
-            <!-- Stats Summary -->
-            <div class="stats-summary">
-                <div class="stat-card">
-                    <div class="stat-number">{{ insights|length }}</div>
-                    <div class="stat-label">Total Insights</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ insights|length }}</div>
-                    <div class="stat-label">Active</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">
-                        {% with high_priority=insights|dictsort:"priority"|slice:":5" %}
-                        {{ high_priority|length }}
-                        {% endwith %}
-                    </div>
-                    <div class="stat-label">High Priority</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ insights.0.created_at|date:"M d" }}</div>
-                    <div class="stat-label">Latest Update</div>
-                </div>
-            </div>
-
-            <!-- Filter Tabs -->
-            <div class="filter-tabs">
-                <button class="filter-tab active" onclick="filterInsights('all')">📊 All Insights</button>
-                <button class="filter-tab" onclick="filterInsights('SPENDING')">💸 Spending</button>
-                <button class="filter-tab" onclick="filterInsights('SAVING')">💰 Savings</button>
-                <button class="filter-tab" onclick="filterInsights('BUDGET')">⚠️ Budget</button>
-                <button class="filter-tab" onclick="filterInsights('PREDICTION')">🔮 Predictions</button>
-                <button class="filter-tab" onclick="filterInsights('RECOMMENDATION')">💡 Recommendations</button>
-            </div>
-
-            <!-- Insights Grid -->
-            <div class="insights-grid">
-                {% for insight in insights|unique_insights %}
-                <div class="insight-card" data-type="{{ insight.insight_type }}">
-                    <div class="insight-type-icon icon-{{ insight.insight_type|lower }}">
-                        {% if insight.insight_type == 'SPENDING' %}📉
-                        {% elif insight.insight_type == 'SAVING' %}💰
-                        {% elif insight.insight_type == 'BUDGET' %}⚠️
-                        {% elif insight.insight_type == 'PREDICTION' %}🔮
-                        {% else %}💡
-                        {% endif %}
-                    </div>
-
-                    <div class="insight-header">
-                        <div class="insight-meta">
-                            <span class="priority-badge priority-{{ insight.priority }}">
-                                {% if insight.priority == 5 %}🔴 Critical
-                                {% elif insight.priority == 4 %}🟠 High
-                                {% elif insight.priority == 3 %}🟡 Medium
-                                {% elif insight.priority == 2 %}🟢 Low
-                                {% else %}⚪ Info
-                                {% endif %}
-                            </span>
-                            {% if insight.is_read %}
-                            <span class="read-badge">✓ Read</span>
-                            {% endif %}
-                            
-                            <!-- Category badges for market-related insights -->
-                            {% if 'NIFTY' in insight.title or 'SENSEX' in insight.title or 'Market' in insight.title %}
-                            <span class="category-badge badge-market">📈 Market</span>
-                            {% elif 'Bank' in insight.title or 'FD' in insight.title or 'Savings Rate' in insight.title %}
-                            <span class="category-badge badge-banking">🏦 Banking</span>
-                            {% elif 'Stock' in insight.title or 'Blue-Chip' in insight.title %}
-                            <span class="category-badge badge-stocks">📊 Stocks</span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <h3 class="insight-title">{{ insight.title }}</h3>
-                    <p class="insight-description">{{ insight.description|linebreaksbr }}</p>
-                    <div class="insight-fade"></div>
-                    <button class="read-more-btn" aria-expanded="false">Read more</button>
-
-                    <div class="insight-footer">
-                        <span class="insight-date">📅 {{ insight.created_at|date:"F d, Y • g:i A" }}</span>
-                        <div class="insight-actions">
-                            {% if not insight.is_read %}
-                            <a href="{% url 'accounts:mark_insight_read' insight.id %}" class="btn btn-secondary btn-sm">
-                                ✓ Mark as Read
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <!-- Empty State -->
-            <div class="empty-state">
-                <div class="empty-state-icon">🤖</div>
-                <h3>No AI Insights Yet</h3>
-                <p>Generate personalized insights based on your financial data to receive smart recommendations, market trends, investment opportunities, and banking offers tailored just for you!</p>
-                <a href="{% url 'accounts:generate_insights' %}" class="btn btn-primary">
-                    🚀 Generate Your First Insights
-                </a>
-            </div>
-            {% endif %}
-        </main>
+{% block title %}AI Insights - FinanceAI{% endblock %}
+
+{% block extra_css %}
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .page-header h2 { font-size: 32px; font-weight: 800; color: var(--gray-900); }
+    .page-header p { color: var(--gray-500); font-size: 16px; }
+
+    .btn-generate {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--purple-color) 100%);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* Insights Grid */
+    .insights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 24px;
+        align-items: start;
+    }
+
+    .insight-card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--gray-100);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .insight-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+
+    .insight-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+        background: var(--primary-color);
+    }
+
+    .insight-card[data-type="SPENDING"]::before { background: linear-gradient(90deg, #f093fb, #f5576c); }
+    .insight-card[data-type="SAVING"]::before { background: linear-gradient(90deg, #11998e, #38ef7d); }
+    .insight-card[data-type="BUDGET"]::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    
+    .type-icon {
+        width: 56px; height: 56px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; font-size: 28px;
+    }
+
+    .priority-pill {
+        padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .priority-high { background: rgba(220, 38, 38, 0.1); color: var(--danger-color); }
+    .priority-medium { background: rgba(217, 119, 6, 0.1); color: var(--warning-color); }
+    .priority-low { background: rgba(59, 130, 246, 0.1); color: var(--primary-light); }
+
+    .insight-title { font-size: 20px; font-weight: 800; color: var(--gray-800); margin-bottom: 12px; line-height: 1.3; }
+    
+    .insight-text {
+        font-size: 15px; color: var(--gray-600); line-height: 1.6; margin-bottom: 20px;
+        display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    
+    .expanded .insight-text { -webkit-line-clamp: unset; }
+
+    .card-footer {
+        margin-top: auto; padding-top: 16px; border-top: 1px solid var(--gray-100);
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 12px; color: var(--gray-400);
+    }
+
+    .read-more { color: var(--primary-color); font-weight: 700; cursor: pointer; border: none; background: none; font-size: 14px; }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; }
+        .insights-grid { grid-template-columns: 1fr; }
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h2>AI Insights</h2>
+            <p>Smart recommendations based on your unique financial behavior</p>
+        </div>
+        <form action="." method="POST">
+            {% csrf_token %}
+            <button type="submit" name="generate_insights" class="btn btn-generate">
+                <span>🤖</span> Refresh Insights
+            </button>
+        </form>
     </div>
 
-    <script>
-        function filterInsights(type) {
-            // Update active tab
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
+    {% if insights %}
+    <div class="insights-grid">
+        {% for insight in insights|unique_insights %}
+        <div class="insight-card" data-type="{{ insight.insight_type }}">
+            <div class="card-top">
+                <div class="type-icon {% if insight.insight_type == 'SPENDING' %}icon-spending{% elif insight.insight_type == 'SAVING' %}icon-saving{% else %}icon-budget{% endif %}">
+                    {% if insight.insight_type == 'SPENDING' %}💸{% elif insight.insight_type == 'SAVING' %}🛡️{% else %}📅{% endif %}
+                </div>
+                <span class="priority-pill {% if insight.priority >= 4 %}priority-high{% elif insight.priority >= 2 %}priority-medium{% else %}priority-low{% endif %}">
+                    Priority {{ insight.priority }}
+                </span>
+            </div>
 
-            // Filter cards
-            const cards = document.querySelectorAll('.insight-card');
-            let visibleCount = 0;
+            <h3 class="insight-title">{{ insight.title }}</h3>
+            <div class="insight-text">{{ insight.description }}</div>
             
-            cards.forEach(card => {
-                if (type === 'all' || card.dataset.type === type) {
-                    card.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+            <button class="read-more" onclick="this.parentElement.classList.toggle('expanded'); this.innerText = this.parentElement.classList.contains('expanded') ? 'Show Less' : 'Read More'">
+                Read More
+            </button>
 
-            // Show message if no results
-            const grid = document.querySelector('.insights-grid');
-            const existingMsg = grid.querySelector('.no-results-message');
-            if (existingMsg) existingMsg.remove();
-
-            if (visibleCount === 0 && type !== 'all') {
-                const noResults = document.createElement('div');
-                noResults.className = 'empty-state no-results-message';
-                noResults.innerHTML = `
-                    <div class="empty-state-icon">🔍</div>
-                    <h3>No ${type.toLowerCase()} insights found</h3>
-                    <p>Try selecting a different category or generate new insights</p>
-                `;
-                grid.appendChild(noResults);
-            }
-        }
-
-        // Smooth scroll animation for cards
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.insight-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    card.style.transition = 'all 0.5s ease';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-            // Read more toggle and visibility (only show button when text is truncated)
-            document.querySelectorAll('.insight-card').forEach(card => {
-                const desc = card.querySelector('.insight-description');
-                const btn = card.querySelector('.read-more-btn');
-                const fade = card.querySelector('.insight-fade');
-
-                // determine if description is overflowing the clamped height
-                const isOverflowing = desc && desc.scrollHeight > desc.clientHeight + 1;
-                if (btn) {
-                    // always show the Read more button per request
-                    btn.style.display = 'inline-block';
-                    // hide fade if content fits
-                    if (fade) fade.style.display = isOverflowing ? 'block' : 'none';
-                    btn.setAttribute('aria-expanded', 'false');
-                    btn.textContent = 'Read more';
-                    btn.addEventListener('click', (e) => {
-                        const expanded = card.classList.toggle('expanded');
-                        e.target.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-                        e.target.textContent = expanded ? 'Show less' : 'Read more';
-                        if (fade) fade.style.display = expanded ? 'none' : (isOverflowing ? 'block' : 'none');
-                        // allow scrolling inside the description when expanded
-                        if (expanded) {
-                            desc.style.overflow = 'auto';
-                        } else {
-                            desc.style.overflow = 'hidden';
-                        }
-                    });
-                }
-            });
-        });
-    </script>
-</body>
-
-</html>
+            <div class="card-footer">
+                <span>🕒 {{ insight.created_at|timesince }} ago</span>
+                <span>AI Recommendation</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">🤖</div>
+        <h3>Gathering Data...</h3>
+        <p>Our AI is analyzing your transactions to provide personalized insights. Check back soon or click refresh above.</p>
+        <form action="." method="POST">
+            {% csrf_token %}
+            <button type="submit" name="generate_insights" class="btn btn-primary">Generate Insights Now</button>
+        </form>
+    </div>
+    {% endif %}
+{% endblock %}

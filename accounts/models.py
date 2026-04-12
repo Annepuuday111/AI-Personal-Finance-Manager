@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -37,7 +38,6 @@ class UserProfile(models.Model):
 
     @property
     def monthly_expenses(self):
-        from django.db.models import Sum
         now = timezone.now()
         return self.user.transactions.filter(
             transaction_type='EXPENSE',
@@ -47,7 +47,6 @@ class UserProfile(models.Model):
 
     @property
     def monthly_income(self):
-        from django.db.models import Sum
         now = timezone.now()
         return self.user.transactions.filter(
             transaction_type='INCOME',
@@ -146,6 +145,11 @@ class Transaction(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
+        indexes = [
+            models.Index(fields=['user', 'date']),
+            models.Index(fields=['user', 'transaction_type']),
+            models.Index(fields=['user', 'category']),
+        ]
 
 
 # ==================== BUDGETS ====================
@@ -170,13 +174,18 @@ class Budget(models.Model):
 
     @property
     def spent_amount(self):
-        from django.db.models import Sum
         return self.category.transactions.filter(
             user=self.user,
             transaction_type='EXPENSE',
             date__gte=self.start_date,
             date__lte=self.end_date
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+    class Meta:
+        ordering = ['-start_date']
+        indexes = [
+            models.Index(fields=['user', 'start_date', 'end_date']),
+        ]
 
     @property
     def remaining_amount(self):
@@ -342,4 +351,25 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+
+# ==================== EMAIL OTP ====================
+class EmailOTP(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='email_otp', null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_verified = models.BooleanField(default=False)
+
+    def is_expired(self):
+        # OTP expires in 5 minutes
+        expiration_time = self.created_at + timezone.timedelta(minutes=5)
+        return timezone.now() > expiration_time
+
+    def __str__(self):
+        return f"OTP for {self.user.email}"
+
+    class Meta:
+        verbose_name = 'Email OTP'
+        verbose_name_plural = 'Email OTPs'

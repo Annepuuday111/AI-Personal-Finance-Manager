@@ -343,6 +343,25 @@
             <p>Smart Financial Management</p>
         </div>
 
+        {% if show_otp %}
+        <h2 class="text-indigo-600">Verification Required</h2>
+        <p class="signup-link" style="margin-bottom: 20px;">
+            We've sent a 6-digit code to <strong>{{ otp_email }}</strong>. Please enter it below.
+        </p>
+
+        <form method="post" action="{% url 'account_login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="text" name="otp" id="id_otp" placeholder="000000" maxlength="6" pattern="\d{6}" required autofocus 
+                       style="font-size: 32px; text-align: center; letter-spacing: 0.5em; font-weight: 700; border-radius: 12px; height: 65px;">
+            </div>
+
+            <button type="submit" class="btn-primary">Verify & Login</button>
+            <div class="signup-link" style="margin-top: 15px;">
+                <a href="{% url 'accounts:reset_login' %}">Back to login</a>
+            </div>
+        </form>
+        {% else %}
         <h2>Welcome Back</h2>
 
         {% if messages %}
@@ -424,6 +443,7 @@
         <div class="signup-link">
             Don't have an account? <a href="{% url 'account_signup' %}">Sign Up</a>
         </div>
+        {% endif %}
     </div>
 
     <!-- Footer -->

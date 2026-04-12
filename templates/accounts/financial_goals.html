@@ -1,779 +1,221 @@
+{% extends 'accounts/base_dashboard.html' %}
 {% load humanize %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Goals - FinanceAI</title>
-    <style>
-        :root {
-            --primary-color: #1e40af;
-            --primary-dark: #1e3a8a;
-            --primary-light: #3b82f6;
-            --secondary-color: #059669;
-            --accent-color: #ea580c;
-            --danger-color: #dc2626;
-            --success-color: #16a34a;
-            --warning-color: #d97706;
-            --info-color: #0891b2;
-            --purple-color: #7c3aed;
-            --pink-color: #db2777;
-            --gray-50: #f8fafc;
-            --gray-100: #f1f5f9;
-            --gray-200: #e2e8f0;
-            --gray-300: #cbd5e1;
-            --gray-400: #94a3b8;
-            --gray-500: #64748b;
-            --gray-600: #475569;
-            --gray-700: #334155;
-            --gray-800: #1e293b;
-            --gray-900: #0f172a;
-            --sidebar-width: 280px;
-            --border-radius: 12px;
-            --border-radius-lg: 16px;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
-            min-height: 100vh;
-            color: var(--gray-800);
-            line-height: 1.6;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-
-        /* Loading Animation */
-        .loading {
-            opacity: 0;
-            animation: fadeIn 0.6s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dashboard-layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 50%, var(--purple-color) 100%);
-            color: white;
-            padding: 0;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-xl);
-            z-index: 1000;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-        }
-
-        .sidebar-header {
-            padding: 32px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .sidebar-header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .sidebar-header p {
-            font-size: 14px;
-            opacity: 0.8;
-            font-weight: 400;
-        }
-
-        .sidebar-menu {
-            padding: 24px 0;
-        }
-
-        .menu-section {
-            margin-bottom: 32px;
-        }
-
-        .menu-section-title {
-            padding: 0 24px;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            opacity: 0.7;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 14px 24px;
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            gap: 14px;
-            position: relative;
-            border-radius: 0 24px 24px 0;
-            margin: 2px 8px 2px 0;
-        }
-
-        .menu-item:hover,
-        .menu-item.active {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .menu-item i {
-            font-size: 20px;
-            width: 24px;
-            transition: transform 0.3s ease;
-        }
-
-        .menu-item:hover i {
-            transform: scale(1.1);
-        }
-
-        .sidebar-footer {
-            padding: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: auto;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-        }
-
-        .user-profile:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .user-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .user-info h4 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .user-info p {
-            font-size: 13px;
-            opacity: 0.8;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 30px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .page-header h2 {
-            color: #333;
-            font-size: 32px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        .btn-secondary:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .goals-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 25px;
-        }
-
-        .goal-card {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .goal-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
-        }
-
-        .goal-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .goal-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .goal-icon-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
-        }
-
-        .goal-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-        }
-
-        .goal-info h3 {
-            color: #333;
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-
-        .goal-status {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .goal-status.in-progress {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .goal-status.completed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .goal-amounts {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .amount-box {
-            text-align: center;
-        }
-
-        .amount-label {
-            font-size: 11px;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-
-        .amount-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .amount-value.target {
-            color: #667eea;
-        }
-
-        .amount-value.remaining {
-            color: #f59e0b;
-        }
-
-        .progress-section {
-            margin-bottom: 20px;
-        }
-
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .progress-label {
-            font-size: 13px;
-            color: #666;
-            font-weight: 600;
-        }
-
-        .progress-percentage {
-            font-weight: 700;
-            font-size: 18px;
-            color: #667eea;
-        }
-
-        .progress-bar {
-            height: 14px;
-            background: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            transition: width 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% {
-                transform: translateX(-100%);
-            }
-
-            100% {
-                transform: translateX(100%);
-            }
-        }
-
-        .goal-description {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .goal-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 15px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .goal-deadline {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .goal-deadline strong {
-            color: #ef4444;
-        }
-
-        .update-progress-form {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .update-progress-form input {
-            width: 100px;
-            padding: 6px 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .update-progress-form button {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .empty-state p {
-            color: #666;
-            margin-bottom: 25px;
-        }
-
-        .stats-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 30px;
-            color: white;
-            margin-bottom: 30px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-item h4 {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-item p {
-            font-size: 32px;
-            font-weight: 700;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .goals-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-banner {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="dashboard-layout">
-        <!-- Mobile Menu Toggle -->
-        <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-            <i>☰</i>
-        </button>
-
-        <!-- Sidebar Overlay -->
-        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h1>FinanceAI</h1>
-                <p>Smart Finance Manager</p>
-            </div>
-
-            <nav class="sidebar-menu">
-                <div class="menu-section">
-                    <div class="menu-section-title">Main</div>
-                    <a href="{% url 'accounts:dashboard' %}" class="menu-item active">
-                        <i>📊</i> Dashboard
-                    </a>
-                    <a href="{% url 'accounts:transactions' %}" class="menu-item">
-                        <i>💸</i> Transactions
-                    </a>
-                    <a href="{% url 'accounts:bank_accounts' %}" class="menu-item">
-                        <i>🏦</i> Bank Accounts
-                    </a>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-section-title">Planning</div>
-                    <a href="{% url 'accounts:budgets' %}" class="menu-item">
-                        <i>💰</i> Budgets
-                    </a>
-                    <a href="{% url 'accounts:financial_goals' %}" class="menu-item">
-                        <i>🎯</i> Goals
-                    </a>
-                    <a href="{% url 'accounts:categories' %}" class="menu-item">
-                        <i>📑</i> Categories
-                    </a>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-section-title">Insights</div>
-                    <a href="{% url 'accounts:ai_insights' %}" class="menu-item">
-                        <i>🤖</i> AI Insights
-                    </a>
-                    <a href="{% url 'accounts:analytics' %}" class="menu-item">
-                        <i>📈</i> Analytics
-                    </a>
-                    <a href="{% url 'accounts:notifications' %}" class="menu-item{% if request.resolver_match.url_name == 'notifications' %} active{% endif %}">
-                        <i>🔔</i> Notifications
-                        {% if unread_notifications_count > 0 %}
-                        <span style="background: #ef4444; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: auto;">{{ unread_notifications_count }}</span>
-                        {% endif %}
-                    </a>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-section-title">Settings</div>
-
-                    <a href="{% url 'accounts:profile' %}" class="menu-item">
-                        <i>⚙️</i> Settings
-                    </a>
-
-                    <a href="{% url 'chat:chat_home' %}" class="menu-item">
-                        <i>💬</i> Chat
-                    </a>
-
-                    <a href="{% url 'account_logout' %}" class="menu-item">
-                        <i>🚪</i> Logout
-                    </a>
-                </div>
-            </nav>
-
-            <div class="sidebar-footer">
-                <div class="user-profile">
-                    <div class="user-avatar">{{ user.first_name.0|upper|default:user.email.0|upper }}</div>
-                    <div class="user-info">
-                        <h4>{{ user.first_name|default:user.email|truncatechars:15 }}</h4>
-                        <p>{{ user.email|truncatechars:20 }}</p>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="page-header">
-                <div>
-                    <h2>Financial Goals</h2>
-                    <p>Track your savings and financial milestones</p>
-                </div>
-                <a href="{% url 'accounts:add_financial_goal' %}" class="btn btn-primary">+ Create Goal</a>
-            </div>
-
-            {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}"
-                style="padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; background: {% if message.tags == 'success' %}#d1fae5{% else %}#fee2e2{% endif %}; color: {% if message.tags == 'success' %}#065f46{% else %}#991b1b{% endif %};">
-                {{ message }}
-            </div>
-            {% endfor %}
-            {% endif %}
-
-            {% if goals %}
-            <div class="stats-banner">
-                <div class="stat-item">
-                    <h4>Total Goals</h4>
-                    <p>{{ goals|length }}</p>
-                </div>
-                <div class="stat-item">
-                    <h4>In Progress</h4>
-                    <p>{{ in_progress_count|default:0 }}</p>
-                </div>
-                <div class="stat-item">
-                    <h4>Total Target</h4>
-                    <p>₹{{ total_target|floatformat:0|intcomma|default:"0" }}</p>
-                </div>
-                <div class="stat-item">
-                    <h4>Total Saved</h4>
-                    <p>₹{{ total_saved|floatformat:0|intcomma|default:"0" }}</p>
-                </div>
-            </div>
-
-            <div class="goals-grid">
-                {% for goal in goals %}
-                <div class="goal-card">
-                    <div class="goal-header">
-                        <div class="goal-icon-wrapper">
-                            <div class="goal-icon">{{ goal.icon }}</div>
-                            <div class="goal-info">
-                                <h3>{{ goal.name }}</h3>
-                                <span class="goal-status {{ goal.status|lower|cut:'_' }}">
-                                    {{ goal.get_status_display }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="goal-amounts">
-                        <div class="amount-box">
-                            <div class="amount-label">Current</div>
-                            <div class="amount-value">₹{{ goal.current_amount|floatformat:0|intcomma }}</div>
-                        </div>
-                        <div class="amount-box">
-                            <div class="amount-label">Target</div>
-                            <div class="amount-value target">₹{{ goal.target_amount|floatformat:0|intcomma }}</div>
-                        </div>
-                        <div class="amount-box">
-                            <div class="amount-label">Remaining</div>
-                            <div class="amount-value remaining">₹{{ goal.remaining_amount|floatformat:0|intcomma }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="progress-section">
-                        <div class="progress-header">
-                            <span class="progress-label">Progress</span>
-                            <span class="progress-percentage">{{ goal.progress_percentage|floatformat:1 }}%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: {{ goal.progress_percentage }}%"></div>
-                        </div>
-                    </div>
-
-                    {% if goal.description %}
-                    <div class="goal-description">
-                        {{ goal.description }}
-                    </div>
-                    {% endif %}
-
-                    <div class="goal-footer">
-                        <div class="goal-deadline">
-                            📅 Deadline: <strong>{{ goal.deadline|date:"M d, Y" }}</strong>
-                        </div>
-                        {% if goal.status == 'IN_PROGRESS' %}
-                        <form method="post" action="{% url 'accounts:update_goal_progress' goal.id %}"
-                            class="update-progress-form">
-                            {% csrf_token %}
-                            <input type="number" name="amount" placeholder="Amount" step="0.01" required>
-                            <button type="submit" class="btn btn-secondary">+ Add</button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">🎯</div>
-                <h3>No Financial Goals Yet</h3>
-                <p>Set your first financial goal and start working towards it</p>
-                <a href="{% url 'accounts:add_financial_goal' %}" class="btn btn-primary">Create Your First Goal</a>
-            </div>
-            {% endif %}
-        </main>
+{% block title %}Financial Goals - FinanceAI{% endblock %}
+
+{% block extra_css %}
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h2 {
+        color: var(--gray-900);
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .stats-banner {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--purple-color) 100%);
+        border-radius: var(--border-radius-lg);
+        padding: 30px;
+        color: white;
+        margin-bottom: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 30px;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .stat-item { text-align: center; }
+    .stat-item h4 { font-size: 13px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; }
+    .stat-item p { font-size: 32px; font-weight: 800; }
+
+    .goals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 24px;
+    }
+
+    .goal-card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: 30px;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        border: 1px solid var(--gray-100);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .goal-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+
+    .goal-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--purple-color));
+    }
+
+    .goal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+    .goal-icon-wrapper { display: flex; align-items: center; gap: 16px; }
+    .goal-icon {
+        width: 56px; height: 56px; border-radius: 14px;
+        background: var(--gray-50);
+        display: flex; align-items: center; justify-content: center; font-size: 28px;
+    }
+
+    .goal-status {
+        display: inline-block; padding: 4px 12px; border-radius: 20px;
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+    .status-in-progress { background: rgba(59, 130, 246, 0.1); color: var(--primary-light); }
+    .status-completed { background: rgba(22, 163, 74, 0.1); color: var(--success-color); }
+
+    .goal-amounts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .amount-box { text-align: center; background: var(--gray-50); padding: 12px; border-radius: 12px; }
+    .amount-label { font-size: 11px; color: var(--gray-500); text-transform: uppercase; margin-bottom: 4px; font-weight: 700; }
+    .amount-value { font-size: 16px; font-weight: 800; color: var(--gray-800); }
+
+    .progress-section { margin-bottom: 24px; }
+    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .progress-percentage { font-weight: 800; font-size: 20px; color: var(--primary-color); }
+    .progress-bar { height: 12px; background: var(--gray-100); border-radius: 10px; overflow: hidden; }
+    .progress-fill {
+        height: 100%; border-radius: 10px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        background: linear-gradient(90deg, var(--primary-color), var(--purple-color));
+        position: relative;
+    }
+    .progress-fill::after {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+    .goal-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        padding-top: 20px; border-top: 1px solid var(--gray-100);
+    }
+    .goal-deadline { font-size: 13px; color: var(--gray-500); font-weight: 500; }
+    .goal-deadline strong { color: var(--danger-color); }
+
+    .update-progress-form { display: flex; gap: 8px; }
+    .update-progress-form input {
+        width: 100px; padding: 8px 12px; border: 1px solid var(--gray-200);
+        border-radius: 8px; font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+        .goals-grid { grid-template-columns: 1fr; }
+        .stats-banner { grid-template-columns: repeat(2, 1fr); padding: 20px; gap: 16px; }
+        .goal-amounts { grid-template-columns: 1fr; }
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <div>
+            <h2>Financial Goals</h2>
+            <p style="color: var(--gray-500);">Track your savings and financial milestones</p>
+        </div>
+        <a href="{% url 'accounts:add_financial_goal' %}" class="btn btn-primary">
+            <span>➕</span> Create Goal
+        </a>
     </div>
 
-    <script>
-        // Add custom filter for sum_field (fallback if not available)
-        // This would normally be handled by a custom template filter
-    </script>
-</body>
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
 
-</html>
+    {% if goals %}
+    <div class="stats-banner">
+        <div class="stat-item">
+            <h4>Total Goals</h4>
+            <p>{{ goals|length }}</p>
+        </div>
+        <div class="stat-item">
+            <h4>Active</h4>
+            <p>{{ in_progress_count|default:0 }}</p>
+        </div>
+        <div class="stat-item">
+            <h4>Total Saved</h4>
+            <p>₹{{ total_saved|floatformat:0|intcomma|default:"0" }}</p>
+        </div>
+        <div class="stat-item">
+            <h4>Completion</h4>
+            <p>{{ completion_rate|default:0 }}%</p>
+        </div>
+    </div>
+
+    <div class="goals-grid">
+        {% for goal in goals %}
+        <div class="goal-card">
+            <div class="goal-header">
+                <div class="goal-icon-wrapper">
+                    <div class="goal-icon">{{ goal.icon }}</div>
+                    <div>
+                        <h3 class="card-name" style="font-size: 20px; font-weight: 700; color: var(--gray-800);">{{ goal.name }}</h3>
+                        <span class="goal-status {% if goal.status == 'COMPLETED' %}status-completed{% else %}status-in-progress{% endif %}">
+                            {{ goal.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="goal-amounts">
+                <div class="amount-box">
+                    <div class="amount-label">Saved</div>
+                    <div class="amount-value">₹{{ goal.current_amount|floatformat:0|intcomma }}</div>
+                </div>
+                <div class="amount-box">
+                    <div class="amount-label">Target</div>
+                    <div class="amount-value" style="color: var(--primary-color);">₹{{ goal.target_amount|floatformat:0|intcomma }}</div>
+                </div>
+                <div class="amount-box">
+                    <div class="amount-label">Left</div>
+                    <div class="amount-value" style="color: var(--warning-color);">₹{{ goal.remaining_amount|floatformat:0|intcomma }}</div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span style="font-size: 13px; font-weight: 600; color: var(--gray-500);">Overall Progress</span>
+                    <span class="progress-percentage">{{ goal.progress_percentage|floatformat:1 }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ goal.progress_percentage }}%"></div>
+                </div>
+            </div>
+
+            <div class="goal-footer">
+                <div class="goal-deadline">
+                    📅 Deadline: <strong>{{ goal.deadline|date:"M d, Y" }}</strong>
+                </div>
+                {% if goal.status == 'IN_PROGRESS' %}
+                <form method="post" action="{% url 'accounts:update_goal_progress' goal.id %}" class="update-progress-form">
+                    {% csrf_token %}
+                    <input type="number" name="amount" placeholder="Amount" step="0.01" required>
+                    <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">+ Add</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">🎯</div>
+        <h3>Set Your Sights High!</h3>
+        <p>Whether it's a new car or an emergency fund, start tracking your progress here.</p>
+        <a href="{% url 'accounts:add_financial_goal' %}" class="btn btn-primary">Create Your First Goal</a>
+    </div>
+    {% endif %}
+{% endblock %}
