@@ -24,10 +24,6 @@
 
 <br/><br/>
 
-<a href="https://aipoweredfinance.pythonanywhere.com/"><img src="https://img.shields.io/badge/🚀%20Live%20Demo-Open%20App-FF6B6B?style=for-the-badge" alt="Live Demo" height="40"/></a>
-
-<br/><br/>
-
 [About](#-about) • [Features](#-features) • [Tech Stack](#️-tech-stack) • [Project Structure](#-project-structure) • [Getting Started](#-getting-started) • [Roadmap](#️-roadmap) • [Author](#-author)
 
 </div>
