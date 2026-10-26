@@ -1,143 +1,228 @@
-# 💰 FinanceAI: The Smart Way to Manage Your Money
+<div align="center">
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django" />
-  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
-</p>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:FF6B6B,35:FFA94D,70:4DABF7,100:845EF7&height=200&section=header&text=FinanceAI&fontSize=44&fontColor=ffffff&fontAlignY=36&animation=fadeIn&desc=AI-Powered%20Personal%20Finance%20Manager&descSize=16&descAlignY=58" width="100%"/>
 
----
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1000&color=845EF7&center=true&vCenter=true&width=700&lines=Track+accounts%2C+transactions+%26+budgets;Set+goals+and+watch+your+progress;Get+smart+insights+on+your+spending;Chat+with+a+Groq-powered+finance+assistant" alt="Typing SVG"/>
 
-## 🚀 Overview
+<br/>
 
-**FinanceAI** is a state-of-the-art personal finance management platform designed to help users take full control of their financial life. By combining modern banking integrations with advanced AI insights, we transform complex financial data into actionable wisdom.
+<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
+<img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django"/>
+<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+<img src="https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logoColor=white" alt="Groq"/>
+<img src="https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white" alt="Chart.js"/>
+<img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5"/>
+<img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3"/>
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript"/>
 
----
+<br/>
 
-## ⚡ The Problem
+<img src="https://img.shields.io/badge/Status-Active-20C997?style=for-the-badge" alt="Status"/>
+<img src="https://img.shields.io/github/stars/Annepuuday111/AI-Personal-Finance-Manager?style=for-the-badge&color=845EF7" alt="Stars"/>
+<img src="https://img.shields.io/github/last-commit/Annepuuday111/AI-Personal-Finance-Manager?style=for-the-badge&color=4DABF7" alt="Last Commit"/>
+<img src="https://img.shields.io/github/repo-size/Annepuuday111/AI-Personal-Finance-Manager?style=for-the-badge&color=FF6B6B" alt="Repo Size"/>
 
-Managing personal finances is often a chaotic and overwhelming task for many. Traditional methods suffer from:
+<br/><br/>
 
-*   **Fragmented Data**: Transactions spread across multiple bank accounts and wallets.
-*   **Manual Entry Fatigue**: Spending hours logging every coffee or bill payment.
-*   **Lack of Insights**: Raw numbers don't tell you *why* you're overspending or *how* to save better.
-*   **Security Fears**: Concerns about data privacy and insecure authentication.
-*   **Complexity**: Most tools are designed for accountants, not everyday people.
+<a href="https://aipoweredfinance.pythonanywhere.com/"><img src="https://img.shields.io/badge/🚀%20Live%20Demo-Open%20App-FF6B6B?style=for-the-badge" alt="Live Demo" height="40"/></a>
 
-## 💡 The Solution
+<br/><br/>
 
-**FinanceAI** bridges the gap between raw data and financial freedom. Our solution provides:
+[About](#-about) • [Features](#-features) • [Tech Stack](#️-tech-stack) • [Project Structure](#-project-structure) • [Getting Started](#-getting-started) • [Roadmap](#️-roadmap) • [Author](#-author)
 
-*   **Centralized Hub**: View all your accounts, budgets, and goals in one unified dashboard.
-*   **AI-Powered Insights**: Get personalized advice on spending patterns and saving strategies.
-*   **Automated Tracking**: Effortless categorization of transactions using intelligent algorithms.
-*   **Military-Grade Security**: Secure OAuth login (Google & Facebook) and 2FA/OTP verification.
-*   **Goal-Oriented Planning**: Set and track financial milestones with real-time progress updates.
+</div>
 
----
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
 
-## 🛠️ The Tech Stack
+## 📖 About
 
-| Category | Tools & Technologies |
+**FinanceAI** is a Django web application for managing personal finances in one place. Users sign up with email (verified by a one-time password) or via Google / Facebook, then track bank accounts, income and expenses, category budgets and savings goals. A built-in insights engine analyses spending and budget health, and a chat assistant powered by **Groq** (`llama-3.1-8b-instant`) answers personal-finance questions.
+
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
+
+## ✨ Features
+
+| | Feature |
+| :---: | :--- |
+| 🔐 | **Authentication** with `django-allauth` – email login plus Google and Facebook OAuth |
+| 🛡️ | **Email OTP verification** – 6-digit codes on signup and login, with expiry and a resend option |
+| 🏦 | **Bank accounts** – checking, savings, credit card, investment and cash accounts with balances |
+| 💸 | **Transactions** – income / expense / transfer entries with categories, notes, tags, receipts and recurring flags |
+| 🗂️ | **Custom categories** – income and expense categories with icon, colour and optional budget limit |
+| 📅 | **Budgets** – weekly / monthly / yearly budgets with configurable alert thresholds |
+| 🎯 | **Financial goals** – target amount, deadline and progress updates |
+| 📊 | **Dashboard & analytics** – income vs. expense trends and category breakdowns with Chart.js |
+| 🧠 | **Insights engine** – spending patterns, saving opportunities, budget health, expense predictions and recommendations |
+| 📰 | **Finance news insights** – Google News RSS headlines turned into insights (`fetch_google_news` command) |
+| 🔔 | **Notifications** – transaction, budget, goal, low-balance and milestone alerts with read / read-all |
+| 💬 | **AI chat assistant** – personalised finance Q&A via the Groq API |
+
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
+
+## 🛠️ Tech Stack
+
+<div align="center">
+
+<img src="https://skillicons.dev/icons?i=python,django,postgres,html,css,js&theme=light" alt="Tech icons"/>
+
+</div>
+
+| Layer | Technology |
 | :--- | :--- |
-| **Backend** | ![Django](https://img.shields.io/badge/Django-092E20?style=flat-square&logo=django&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) |
-| **Frontend** | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white) ![JS](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) |
-| **AI/ML** | ![NLP](https://img.shields.io/badge/AI-Insight-8A2BE2) OpenAI API (Internal Integration) |
-| **Database** | ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white) (Dev) / PostgreSQL (Prod) |
-| **Security** | ![allauth](https://img.shields.io/badge/OAuth-Google%20%26%20Facebook-blue) OTP/Email Verification |
+| **Backend** | ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) ![Django](https://img.shields.io/badge/Django%204.2-092E20?style=for-the-badge&logo=django&logoColor=white) |
+| **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white) (`psycopg2-binary`) |
+| **Auth** | ![allauth](https://img.shields.io/badge/django--allauth-092E20?style=for-the-badge&logo=django&logoColor=white) ![Google](https://img.shields.io/badge/Google%20OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white) ![Facebook](https://img.shields.io/badge/Facebook%20OAuth-0866FF?style=for-the-badge&logo=facebook&logoColor=white) |
+| **AI Chat** | ![Groq](https://img.shields.io/badge/Groq%20·%20Llama%203.1-F55036?style=for-the-badge&logoColor=white) |
+| **Frontend** | ![Django Templates](https://img.shields.io/badge/Django%20Templates-092E20?style=for-the-badge&logo=django&logoColor=white) ![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) |
+| **Utilities** | `python-decouple`, `python-dotenv`, `feedparser`, `requests`, `Pillow` |
 
----
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
 
-## ✨ Key Features
+## 📂 Project Structure
 
-- 🔐 **Secure Authentication**: Traditional login, Google OAuth, and Facebook integration.
-- 🛡️ **Two-Step Verification**: Email-based OTP for enhanced security during signup and login.
-- 📊 **Dynamic Dashboard**: Real-time visualization of your net worth, expenses, and budget status.
-- 🧠 **AI Insights**: Generate personalized financial reports and tips based on your spending.
-- 🎯 **Financial Goals**: Set targets for savings, vacations, or major purchases.
-- 📅 **Budget Management**: Create monthly budgets and receive alerts when you're close to limits.
-- 📱 **Fully Responsive**: Access your finances from any device—desktop, tablet, or mobile.
-
----
-
-## 🔧 Installation & Setup
-
-### 1. Prerequisites
-Ensure you have Python 3.10+ installed on your system.
-
-### 2. Clone and Prepare
-```bash
-# Clone the repository
-git clone https://github.com/Annepuuday111/ai_powered_personal_finance_management.git
-cd ai_powered_personal_finance_management
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # macOS/Linux
-# venv\Scripts\activate  # Windows
+```text
+AI-Personal-Finance-Manager/
+├── accounts/                     # Core finance app
+│   ├── management/commands/
+│   │   └── fetch_google_news.py  # Creates news-based insights for all users
+│   ├── migrations/
+│   ├── templatetags/
+│   ├── ai_service.py             # Insights engine (AIFinanceAnalyzer)
+│   ├── notification_service.py   # Alerts & notifications
+│   ├── signals.py                # Profile / welcome hooks on user creation
+│   ├── forms.py
+│   ├── models.py                 # Profile, Category, BankAccount, Transaction, Budget,
+│   │                             # FinancialGoal, AIInsight, Notification, EmailOTP ...
+│   ├── urls.py
+│   └── views.py                  # Dashboard, CRUD views, OTP login/signup
+├── chat/                         # Groq-powered chat assistant
+│   ├── urls.py
+│   └── views.py
+├── financeai/                    # Project settings & root URLs
+│   ├── settings.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
+├── templates/
+│   ├── account/                  # Landing, login, signup, OTP pages
+│   ├── accounts/                 # Dashboard, transactions, budgets, goals, analytics ...
+│   └── chat/
+├── manage.py
+└── requirements.txt
 ```
 
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
 
-### 4. Configuration
-Create a `.env` file in the root directory:
-```env
-SECRET_KEY=your_secret_key
-DEBUG=True
-GOOGLE_CLIENT_ID=your_id
-GOOGLE_CLIENT_SECRET=your_secret
-# ... other OAuth keys
-```
+## 🚀 Getting Started
 
-### 5. Initialize Database
-```bash
-python manage.py makemigrations
-python manage.py migrate
-python manage.py createsuperuser
-```
+### Prerequisites
 
----
+- Python 3.10+
+- PostgreSQL running locally (or reachable via the `DB_*` settings)
+- A [Groq API key](https://console.groq.com/) for the chat assistant
+- A Gmail / SMTP account with an app password for OTP emails
 
-## 📖 How to Use
+### Setup
 
-1.  **Launch the App**: Run `python manage.py runserver` and navigate to `http://127.0.0.1:8000`.
-2.  **Sign Up/Login**:
-    *   **Registration**: Create an account and verify your email via the instant **OTP (One-Time Password)** sent to your inbox.
-    *   **Login**: Enter your credentials. For your security, a 6-digit verification code will be required to complete the sign-in.
-    *   **OAuth**: Use Google or Facebook for lightning-fast, secure 1-click access.
-3.  **Link Accounts**: Head to the **Bank Accounts** section to add your initial balances.
-4.  **Set Budgets**: Use the **Budgets** tab to define category-wise monthly limits.
-5.  **Track Transactions**: Log your income and expenses. The system automatically updates your net worth and budget progress.
-6.  **Get AI Insights**: Visit the **AI Insights** page to receive personalized, AI-driven financial strategies.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Annepuuday111/AI-Personal-Finance-Manager.git
+   cd AI-Personal-Finance-Manager
+   ```
 
----
+2. **Create and activate a virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate      # macOS / Linux
+   # venv\Scripts\activate       # Windows
+   ```
 
-## 🔒 Security Highlights
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-We prioritize your data security with a multi-layered defense system:
-- **Two-Factor Authentication (2FA)**: Mandatory OTP verification for both login and signup.
-- **Session Protection**: Intelligent session management to prevent unauthorized access.
-- **Fail-Safe OTP**: Integrated "Resend OTP" functionality to ensure you're never locked out.
-- **Encryption**: All sensitive data and passwords are cryptographically hashed and secured.
+4. **Create the database**
+   ```bash
+   createdb financeai_db
+   ```
 
----
+5. **Create a `.env` file** in the project root (next to `manage.py`)
+   ```env
+   DEBUG=True
+
+   DB_NAME=financeai_db
+   DB_USER=postgres
+   DB_PASSWORD=your_db_password
+   DB_HOST=localhost
+   DB_PORT=5432
+
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_HOST_USER=your_email@gmail.com
+   EMAIL_HOST_PASSWORD=your_app_password
+   DEFAULT_FROM_EMAIL=FinanceAI <your_email@gmail.com>
+
+   GROQ_API_KEY=your_groq_api_key
+   ```
+
+6. **Run migrations and create an admin user**
+   ```bash
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
+
+7. **(Optional) Enable Google / Facebook login** – in the Django admin (`/admin/`), set the *Site* domain and add a *Social application* for each provider with your OAuth client ID and secret.
+
+8. **Start the server**
+   ```bash
+   python manage.py runserver
+   ```
+   Open http://127.0.0.1:8000
+
+9. **(Optional) Pull finance news into insights**
+   ```bash
+   python manage.py fetch_google_news --max 8
+   ```
+
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
+
+## 🗺️ Roadmap
+
+- [x] OTP-verified email signup & login
+- [x] Accounts, transactions, budgets, goals & analytics
+- [x] Groq-powered chat assistant
+- [ ] Live market-data integration for stock and interest-rate insights
+- [ ] Load all secrets from environment variables
+- [ ] REST API for a mobile client
+
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
 
 ## 🤝 Contributing
 
-We welcome contributions! Please feel free to submit a Pull Request.
+Contributions are welcome!
 
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
 
----
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
 
-<p align="center">
-  Made with ❤️ by the FinanceAI Team
-</p>
+## 👨‍💻 Author
+
+<div align="center">
+
+### Annepu Uday Kumar
+
+<a href="https://github.com/Annepuuday111"><img src="https://img.shields.io/badge/GitHub-Annepuuday111-845EF7?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/></a>
+<a href="https://annepuudaykumar.netlify.app"><img src="https://img.shields.io/badge/Portfolio-Visit-FF6B6B?style=for-the-badge&logo=netlify&logoColor=white" alt="Portfolio"/></a>
+
+</div>
+
+<br/>
+
+<div align="center">⭐ If you like this project, give it a star!</div>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:845EF7,35:4DABF7,70:FFA94D,100:FF6B6B&height=120&section=footer" width="100%"/>
